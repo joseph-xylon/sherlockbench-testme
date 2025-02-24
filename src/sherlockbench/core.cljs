@@ -19,10 +19,11 @@
   [run-id]
   (if (and
        (valid-uuid? run-id)
-       (go (let [response (<! (http/post "http://localhost:8082/api/is-pending-run"
-                                         {:edn-params {:run-id run-id}}))]
-             (pprint (:status response))
-             (pprint (map :login (:body response))))))
+       (go (let [response (<! (http/post "http://localhost:3000/api/is-pending-run"
+                                         {:with-credentials? false
+                                          :json-params {:run-id run-id}}))]
+             (tap> (:status response))
+             (tap> (:body response)))))
     "boop")
   )
 
