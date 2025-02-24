@@ -15,32 +15,32 @@
   (set! js/window.location.hash (str "#/" path)))
 
 (defn valid-run?
-  "does this id reference a valid run?"
+  "Asynchronously checks if a given run-id references a valid run, returns a channel."
   [run-id]
-  (if (and
-       (valid-uuid? run-id)
-       (go (let [response (<! (http/post "http://localhost:3000/api/is-pending-run"
-                                         {:with-credentials? false
-                                          :json-params {:run-id run-id}}))]
-             (tap> (:status response))
-             (tap> (:body response)))))
-    "boop")
-  )
+  (go
+    (and (valid-uuid? run-id)
+         (let [response (<! (http/post "http://localhost:3000/api/is-pending-run"
+                                       {:with-credentials? false
+                                        :json-params {:run-id run-id}}))]
+           (:response (:body response))))))
 
 (defn root
-  "this checks the state and redirects as appropriate"
+  "Checks the state and redirects as appropriate, asynchronously."
   [{{{run-id :run-id} :query} :parameters :as match} store el]
-  (cond
-    ;; have we been provided with a valid run id?
-    (valid-run? run-id) "boop"
+  (go
+    (if (<! (valid-run? run-id))
+      (redirect (str "about?run-id=" run-id))
+      (prn "TODO invalid"))
     )
-  (redirect (str "about?run-id=" run-id))
-  )
+
+  ;; reitit won't like the channel so we give it some hiccup :)
+  [:div
+   [:h1 "Routing"]])
 
 (defn about-page [match store el]
-  (r/render el [:div
-                [:h1 "About SherlochBench"]
-                [:p "This is an app built with Replicant and Reitit."]]))
+  [:div
+   [:h1 "About SherlochBench"]
+   [:p "This is an app built with Replicant and Reitit."]])
 
 (defn main []
   (let [store (atom nil)
@@ -65,5 +65,6 @@
        (fn [match]
          (let [view-fn (get-in match [:data :view])]
            (when view-fn
-             (view-fn match store el))))
+             (r/render el
+                       (view-fn match store el)))))
        {:use-fragment true}))))
