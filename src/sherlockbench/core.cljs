@@ -1,23 +1,42 @@
 (ns sherlockbench.core
+  (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [replicant.dom :as r]
             [reitit.frontend :as reitit]
             [reitit.frontend.easy :as reitit-easy]
             [reitit.coercion.spec :as rss]
             [sherlockbench.logic :as logic]
             [sherlockbench.ui :as ui]
-            [cljs.pprint :refer [pprint]]))
+            [sherlockbench.utility :refer [valid-uuid?]]
+            [cljs.pprint :refer [pprint]]
+            [cljs-http.client :as http]
+            [cljs.core.async :refer [<!]]))
 
 (defn redirect [path]
   (set! js/window.location.hash (str "#/" path)))
 
+(defn valid-run?
+  "does this id reference a valid run?"
+  [run-id]
+  (if (and
+       (valid-uuid? run-id)
+       (go (let [response (<! (http/post "http://localhost:8082/api/is-pending-run"
+                                         {:edn-params {:run-id run-id}}))]
+             (pprint (:status response))
+             (pprint (map :login (:body response))))))
+    "boop")
+  )
+
 (defn root
   "this checks the state and redirects as appropriate"
   [{{{run-id :run-id} :query} :parameters :as match} store el]
+  (cond
+    ;; have we been provided with a valid run id?
+    (valid-run? run-id) "boop"
+    )
   (redirect (str "about?run-id=" run-id))
   )
 
 (defn about-page [match store el]
-  (pprint match)
   (r/render el [:div
                 [:h1 "About SherlochBench"]
                 [:p "This is an app built with Replicant and Reitit."]]))
