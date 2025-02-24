@@ -2,8 +2,25 @@
   (:require [replicant.dom :as r]
             [reitit.frontend :as reitit]
             [reitit.frontend.easy :as reitit-easy]
+            [reitit.coercion.spec :as rss]
             [sherlockbench.logic :as logic]
-            [sherlockbench.ui :as ui]))
+            [sherlockbench.ui :as ui]
+            [cljs.pprint :refer [pprint]]))
+
+(defn redirect [path]
+  (set! js/window.location.hash (str "#/" path)))
+
+(defn root
+  "this checks the state and redirects as appropriate"
+  [{{{run-id :run-id} :query} :parameters :as match} store el]
+  (redirect (str "about?run-id=" run-id))
+  )
+
+(defn about-page [match store el]
+  (pprint match)
+  (r/render el [:div
+                [:h1 "About SherlochBench"]
+                [:p "This is an app built with Replicant and Reitit."]]))
 
 (defn main []
   (let [store (atom nil)
@@ -17,18 +34,16 @@
 
     ;; Define routes
     (let [routes [["/" {:name :home
-                        :view (fn [] (home-page store el))}]
+                        :view root}]
                   ["/about" {:name :about
-                             :view (fn [] (about-page el))}]]]
+                             :view about-page
+                             :parameters {:query {:run-id string?}}}]]]
 
       ;; Initialize Reitit router
       (reitit-easy/start!
-       (reitit/router routes)
+       (reitit/router routes {:data {:coercion rss/coercion}})
        (fn [match]
          (let [view-fn (get-in match [:data :view])]
            (when view-fn
-             (view-fn))))
+             (view-fn match store el))))
        {:use-fragment true}))))
-
-;; I should be able to use this to redirect to new client-side page
-;; (set! js/window.location.hash "#/more-info")
