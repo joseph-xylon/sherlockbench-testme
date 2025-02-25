@@ -18,20 +18,33 @@
   "Asynchronously checks if a given run-id references a valid run, returns a channel."
   [run-id]
   (go
-    (and (valid-uuid? run-id)
-         (let [response (<! (http/post "http://localhost:3000/api/is-pending-run"
-                                       {:with-credentials? false
-                                        :json-params {:run-id run-id}}))]
-           (:response (:body response))))))
+    (let [response (<! (http/post "http://localhost:3000/api/is-pending-run"
+                                  {:with-credentials? false
+                                   :json-params {:run-id run-id}}))]
+      (:response (:body response)))))
 
 (defn root
   "Checks the state and redirects as appropriate, asynchronously."
   [{{{run-id :run-id} :query} :parameters :as match} store el]
-  (go
-    (if (<! (valid-run? run-id))
-      (redirect (str "about?run-id=" run-id))
-      (prn "TODO invalid"))
-    )
+  (if (not (valid-uuid? run-id))
+    ;; there's no query string
+    (redirect (str "landing-anon"))
+
+    ;; there is a query string with a uuid
+    (let [storage-contents (.getItem js/localStorage run-id)]
+      (if (not storage-contents)
+        ;; we didn't start any run yet
+        (go
+          (if (<! (valid-run? run-id))
+            ;; it references a valid run
+            (redirect (str "landing-competition?run-id=" run-id))
+            (redirect (str "error?run-id=" run-id))))
+        
+        ;; we already started the run and have data for it
+        (do
+          ;; get the localstorage data into the atom
+          (reset! store storage-contents)
+          (redirect (str "index?run-id=" run-id))))))
 
   ;; reitit won't like the channel so we give it some hiccup :)
   [:div
@@ -39,7 +52,7 @@
 
 (defn about-page [match store el]
   [:div
-   [:h1 "About SherlochBench"]
+   [:h1 "About SherlockBench"]
    [:p "This is an app built with Replicant and Reitit."]])
 
 (defn main []
