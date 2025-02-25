@@ -15,7 +15,7 @@
 
 (def pass (constantly nil))
 
-(defonce app-state (atom nil))
+(defonce store (atom nil))
 
 (defn valid-run?
   "Asynchronously checks if a given run-id references a valid run, returns a channel."
@@ -44,7 +44,7 @@
 
 (defn root
   "Checks the state and redirects as appropriate, asynchronously."
-  [{{{run-id :run-id} :query} :parameters :as match} store el]
+  [{{{run-id :run-id} :query} :parameters :as match} store]
   {:hiccup [:div
             [:h1 "Routing"]]
    :action-fn
@@ -86,7 +86,11 @@
     [:h1 "Take the SherlochBench test!"]
     [:p "Here you can take the SherlockBench test yourself."]
     [:p "This is an example set of questions just to demonstrate how the test
-   works. If you want to take the full test please " contact-us]]
+   works. If you want to take the full test please " contact-us]
+    [:button {:on {:click [:start-run-anon]}
+              :style {:margin-top 20
+                      :font-size 20}}
+     "Start Test"]]
    
    :action-fn pass})
 
@@ -105,6 +109,23 @@
     [:p "Your test is ready. Run ID: " run-id]]
    :action-fn pass})
 
+(defn start-run [store run-id]
+  (go
+    (let [response (<! (http/post "http://localhost:3000/api/start-run"
+                                  {:with-credentials? false
+                                   :json-params (cond-> {:client-id "sherlockbench-testme"}
+                                                  (not (nil? run-id)) (assoc :existing-run-id run-id))}))
+          {{:keys [run-id run-type benchmark-version attempts]} :body} response]
+      (pprint response)
+      (prn (str "Starting " run-type " benchmark with run-id: " run-id))
+      
+      (reset! store {:run-id run-id
+                     :run-type run-type
+                     :benchmark-version benchmark-version
+                     :attempts attempts})
+
+      )))
+
 (defn main []
   (let [el (js/document.getElementById "app")]
 
@@ -112,7 +133,8 @@
     (r/set-dispatch!
      (fn [_ [action & args]]
        (case action
-         :boop (apply swap! app-state logic/boop args))))
+         :boop (apply swap! store logic/boop args)
+         :start-run-anon (start-run store nil))))
 
     ;; Define routes
     (let [routes [["/" {:name :home
@@ -135,7 +157,7 @@
        (fn [match]
          (let [view-fn (get-in match [:data :view] (fn [_ _] {:hiccup [:div "Page not found"]
                                                               :action-fn pass}))
-               {:keys [hiccup action-fn]} (view-fn match app-state)]
+               {:keys [hiccup action-fn]} (view-fn match store)]
            (r/render el hiccup)
            (action-fn)))
        {:use-fragment true}))))
