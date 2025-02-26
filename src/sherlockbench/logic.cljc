@@ -17,11 +17,14 @@
                                    :json-params (cond-> {:client-id "sherlockbench-testme"}
                                                   (not (nil? run-id)) (assoc :existing-run-id run-id))}))
           {{:keys [run-id run-type benchmark-version attempts]} :body} response
+          attempts-named (map
+                          #(assoc %1 :problem-name (str "Problem " %2))
+                          attempts (range 1 js/Infinity))
           run-data {:run-id run-id
-                     :run-type run-type
-                     :benchmark-version benchmark-version
-                     :attempts attempts}]
-      (pprint response)
+                    :run-type run-type
+                    :benchmark-version benchmark-version
+                    :attempts attempts-named}]
+
       (prn (str "Starting " run-type " benchmark with run-id: " run-id))
 
       ;; update the atom

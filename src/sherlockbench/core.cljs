@@ -57,8 +57,8 @@
        (reitit-easy/push-state :landing-anonymous {} {})
 
        ;; there is a query string with a uuid
-       (let [storage-contents (get local-storage run-id)]
-         (if (nil? storage-contents)
+       (let [run-data (get local-storage run-id)]
+         (if (nil? run-data)
            ;; we didn't start any run yet
            (go
              (if (<! (valid-run? run-id))
@@ -69,7 +69,8 @@
            ;; we already started the run and have data for it
            (do
              ;; get the localstorage data into the atom
-             (reset! store storage-contents)
+             (reset! store run-data)
+             ;; redirect to index
              (reitit-easy/push-state :index {:run-id run-id} {}))))))})
 
 (defn error-run-id-page [{{:keys [run-id]} :path-params} _]
@@ -123,11 +124,14 @@
 
    :action-fn pass})
 
-(defn index-page [{{:keys [run-id]} :path-params} _]
-  {:hiccup
-   [:div
-    [:h1 "SherlockBench Test"]
-    [:p "Your test is ready. Run ID: " run-id]]
+(defn restore-store [run-id store]
+  (when (nil? @store)
+    (let [run-data (get local-storage run-id)]
+      (reset! store run-data))))
+
+(defn index-page [{{:keys [run-id]} :path-params} store]
+  (restore-store run-id store)
+  {:hiccup (ui/index-content run-id store)
    :action-fn pass})
 
 (defn main []
