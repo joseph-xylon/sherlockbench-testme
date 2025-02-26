@@ -12,4 +12,5 @@
         metosin/reitit {:mvn/version "0.8.0-alpha1"}
         metosin/reitit-spec {:mvn/version "0.8.0-alpha1"}
         metosin/reitit-frontend {:mvn/version "0.8.0-alpha1"}
-        cljs-http/cljs-http {:mvn/version "0.1.48"}}}
+        cljs-http/cljs-http {:mvn/version "0.1.48"}
+        funcool/hodgepodge {:mvn/version "0.1.4"}}}

@@ -9,7 +9,8 @@
             [sherlockbench.utility :refer [valid-uuid?]]
             [cljs.pprint :refer [pprint]]
             [cljs-http.client :as http]
-            [cljs.core.async :refer [<!]]))
+            [cljs.core.async :refer [<!]]
+            [hodgepodge.core :refer [local-storage clear!]]))
 
 (def contact-us [:a {:href "mailto:joseph@xylon.me.uk"} "contact us"])
 
@@ -54,8 +55,8 @@
        (reitit-easy/push-state :landing-anonymous {} {})
 
        ;; there is a query string with a uuid
-       (let [storage-contents (.getItem js/localStorage run-id)]
-         (if (not storage-contents)
+       (let [storage-contents (get local-storage run-id)]
+         (if (nil? storage-contents)
            ;; we didn't start any run yet
            (go
              (if (<! (valid-run? run-id))
@@ -67,10 +68,7 @@
            (do
              ;; get the localstorage data into the atom
              (reset! store storage-contents)
-             (reitit-easy/push-state :index {:run-id run-id} {}))))))}
-
-  ;; reitit won't like the channel so we give it some hiccup
-  )
+             (reitit-easy/push-state :index {:run-id run-id} {}))))))})
 
 (defn error-run-id-page [{{:keys [run-id]} :path-params} _]
   {:hiccup
@@ -87,7 +85,7 @@
     [:p "Here you can take the SherlockBench test yourself."]
     [:p "This is an example set of questions just to demonstrate how the test
    works. If you want to take the full test please " contact-us]
-    [:button {:on {:click [:start-run-anon]}
+    [:button {:on {:click [:start-run nil]}
               :style {:margin-top 20
                       :font-size 20}}
      "Start Test"]]
@@ -98,7 +96,11 @@
   {:hiccup
    [:div
     [:h1 "Take the SherlochBench test!"]
-    [:p "Here you can take the SherlockBench test yourself."]]
+    [:p "Here you can take the SherlockBench test yourself."]
+    [:button {:on {:click [:start-run run-id]}
+              :style {:margin-top 20
+                      :font-size 20}}
+     "Start Test"]]
 
    :action-fn pass})
 
@@ -115,15 +117,20 @@
                                   {:with-credentials? false
                                    :json-params (cond-> {:client-id "sherlockbench-testme"}
                                                   (not (nil? run-id)) (assoc :existing-run-id run-id))}))
-          {{:keys [run-id run-type benchmark-version attempts]} :body} response]
-      (pprint response)
-      (prn (str "Starting " run-type " benchmark with run-id: " run-id))
-      
-      (reset! store {:run-id run-id
+          {{:keys [run-id run-type benchmark-version attempts]} :body} response
+          run-data {:run-id run-id
                      :run-type run-type
                      :benchmark-version benchmark-version
-                     :attempts attempts})
+                     :attempts attempts}]
+      (pprint response)
+      (prn (str "Starting " run-type " benchmark with run-id: " run-id))
 
+      ;; update the atom
+      (reset! store run-data)
+      ;; update the localStorage
+      (assoc! local-storage run-id run-data)
+      ;; redirect to the index page
+      (reitit-easy/push-state :index {:run-id run-id} {})
       )))
 
 (defn main []
@@ -134,7 +141,7 @@
      (fn [_ [action & args]]
        (case action
          :boop (apply swap! store logic/boop args)
-         :start-run-anon (start-run store nil))))
+         :start-run (apply start-run store args))))
 
     ;; Define routes
     (let [routes [["/" {:name :home
