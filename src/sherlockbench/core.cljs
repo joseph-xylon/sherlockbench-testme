@@ -47,7 +47,9 @@
   "Checks the state and redirects as appropriate, asynchronously."
   [{{{run-id :run-id} :query} :parameters :as match} store]
   {:hiccup [:div
-            [:h1 "Routing"]]
+            [:h1 "Please Wait..."]
+            [:p "If you see this for more than a few seconds something "
+             "is broken. Please " contact-us]]
    :action-fn
    (fn []
      (if (not (valid-uuid? run-id))
@@ -74,7 +76,8 @@
   {:hiccup
    [:div
     [:h1 "Invalid Run"]
-    [:p "Either your run ID is invalid/expired, or this run is already in-progress in another browser."]
+    [:p "Either your run ID is invalid/expired, or this run is already "
+     "in-progress in another browser."]
     [:p "If this is wrong please " contact-us]]
    :action-fn pass})
 
@@ -83,6 +86,8 @@
    [:div
     [:h1 "Take the SherlochBench test!"]
     [:p "Here you can take the SherlockBench test yourself."]
+    [:p "The test is anonymous (this site doesn't use cookies) but we "
+     "do record the results of the test in our system."]
     [:p "This is an example set of questions just to demonstrate how the test
    works. If you want to take the full test please " contact-us]
     [:button {:on {:click [:start-run nil]}
@@ -96,7 +101,21 @@
   {:hiccup
    [:div
     [:h1 "Take the SherlochBench test!"]
-    [:p "Here you can take the SherlockBench test yourself."]
+    [:p "Here you can take the SherlockBench test."]
+    [:p "The link you used allows you to take the test with the "
+     "\"competition\" problem set, which is the same problem set we test the "
+     "AIs with. However it also means the test is " [:em "not"] " anonymous."]
+    [:p "We save the following information about your test:"]
+    [:ul
+     [:li "The time the test was started"]
+     [:li "Which questions were answered right or wrong"]
+     [:li "Your over-all score"]]
+    [:p "If you wish to practice first, try the anonymous version "
+     [:a {:href (reitit-easy/href :landing-anonymous)
+          :target "_blank"} "here"] "."]
+    [:p "Once you start you will have 24 hours to complete the test."]
+    [:p "The problems are not ordered by difficulty. If you find one "
+     "too hard, skip it and come back to it later."]
     [:button {:on {:click [:start-run run-id]}
               :style {:margin-top 20
                       :font-size 20}}
@@ -111,28 +130,6 @@
     [:p "Your test is ready. Run ID: " run-id]]
    :action-fn pass})
 
-(defn start-run [store run-id]
-  (go
-    (let [response (<! (http/post "http://localhost:3000/api/start-run"
-                                  {:with-credentials? false
-                                   :json-params (cond-> {:client-id "sherlockbench-testme"}
-                                                  (not (nil? run-id)) (assoc :existing-run-id run-id))}))
-          {{:keys [run-id run-type benchmark-version attempts]} :body} response
-          run-data {:run-id run-id
-                     :run-type run-type
-                     :benchmark-version benchmark-version
-                     :attempts attempts}]
-      (pprint response)
-      (prn (str "Starting " run-type " benchmark with run-id: " run-id))
-
-      ;; update the atom
-      (reset! store run-data)
-      ;; update the localStorage
-      (assoc! local-storage run-id run-data)
-      ;; redirect to the index page
-      (reitit-easy/push-state :index {:run-id run-id} {})
-      )))
-
 (defn main []
   (let [el (js/document.getElementById "app")]
 
@@ -140,8 +137,8 @@
     (r/set-dispatch!
      (fn [_ [action & args]]
        (case action
-         :boop (apply swap! store logic/boop args)
-         :start-run (apply start-run store args))))
+         ;; :boop (apply swap! store logic/boop args)
+         :start-run (apply logic/start-run store args))))
 
     ;; Define routes
     (let [routes [["/" {:name :home
