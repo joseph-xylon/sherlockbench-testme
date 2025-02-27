@@ -224,3 +224,143 @@ label, legend, fieldset {
   margin-bottom: 0.5rem;
   font-weight: 600;
 }
+
+/* Attempt Page Styles */
+body {
+  max-width: 90%;
+}
+
+.attempt-page {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.attempt-container {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.attempt-input-section,
+.attempt-log-section {
+  flex: 1;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.attempt-form .form-group {
+  margin-bottom: 15px;
+}
+
+.attempt-form input {
+  width: 100%;
+}
+
+.submit-btn {
+  width: 100%;
+  margin-top: 10px;
+  font-size: 1.1em;
+  padding: 10px;
+}
+
+.log-container {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid #f1f1f1;
+  border-radius: 4px;
+  padding: 10px;
+}
+
+.log-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.log-item {
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #f1f1f1;
+}
+
+.log-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.log-entry {
+  font-size: 0.9em;
+}
+
+.log-input, .log-output, .log-expected, .log-result {
+  margin-bottom: 5px;
+}
+
+.label {
+  font-weight: 600;
+  margin-right: 5px;
+}
+
+.log-result {
+  font-weight: 600;
+  margin-top: 10px;
+}
+
+.log-result.success {
+  color: #2ecc71;
+}
+
+.log-result.failure {
+  color: #e74c3c;
+}
+
+.empty-log {
+  color: #7f8c8d;
+  text-align: center;
+  padding: 20px 0;
+}
+
+.attempt-navigation {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.control-link {
+  display: inline-block;
+  padding: 10px 15px;
+  margin-right: 10px;
+  color: #1d7484;
+  text-decoration: none;
+  border: 1px solid #1d7484;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.control-link:hover {
+  background-color: #1d7484;
+  color: #fff;
+}
+
+#abandon:hover {
+  background-color: #da0004;
+  color: #fff;
+}
+
+/* Mobile Layout */
+@media (max-width: 768px) {
+  .attempt-container {
+    flex-direction: column;
+  }
+  
+  .attempt-log-section {
+    order: 1;
+  }
+  
+  .attempt-input-section {
+    order: 2;
+  }
+}

@@ -44,9 +44,70 @@
       [:p "Complete all problems to finish the test. You can work on problems in any order."]]
      ]))
 
+(defn render-input-field [arg-type idx]
+  (let [id (str "input-" idx)
+        placeholder (case arg-type
+                      "string" "Enter text..."
+                      "integer" "Enter number..."
+                      "boolean" "true or false"
+                      "Enter value...")
+        input-type (case arg-type
+                     "integer" "number"
+                     "text")]
+    [:div.form-group
+     [:label {:for id} (str "Input " (inc idx) " (" arg-type "):")]
+     [:input {:type input-type
+              :id id
+              :name id
+              :placeholder placeholder}]]))
+
+(defn render-input-form [fn-args]
+  [:form.attempt-form
+   [:h2 "Test the Mystery Function"]
+   (map-indexed 
+    (fn [idx arg-type]
+      ^{:key (str "input-field-" idx)}
+      (render-input-field arg-type idx))
+    fn-args)
+   
+   [:button.submit-btn {:type "submit"} "Submit"]])
+
+(defn render-log-content [log]
+  [:div.log-container
+   (if (empty? log)
+     [:p.empty-log "No tests run yet. Submit a test to see results."]
+     [:ul.log-list
+      (map-indexed 
+       (fn [idx entry]
+         [:li.log-item {:key idx} 
+          [:div.log-entry
+           [:div.log-input [:span.label "Input: "] [:span.value (:input entry)]]
+           [:div.log-output [:span.label "Output: "] [:span.value (:output entry)]]
+           [:div.log-expected [:span.label "Expected: "] [:span.value (:expected entry)]]
+           [:div.log-result {:class (if (:success entry) "success" "failure")}
+            (if (:success entry) "✓ Correct" "✗ Incorrect")]]])
+       log)])])
+
+(defn control-buttons-investigate []
+  '([:a.control-link {:href (reitit-easy/href :index {:run-id run-id})} "← Back to problem list"]
+    [:a.control-link {} "I'm Ready"]
+    [:a#abandon.control-link {} "Abandon"]))
+
 (defn render-attempt-page
   [run-id {:keys [attempt-id fn-args problem-name] :as attempt} log]
-  [:div
-   [:h1 (str "Attempt " problem-name)]
-   ]
-  )
+  [:div.attempt-page
+   [:h1 (str "Attempt: " problem-name)]
+   [:p "Test the mystery function until you think you know what it does. Then
+   click \"I'm Ready\" and the system will test you."]
+   [:div.attempt-container
+    ;; Input section
+    [:div.attempt-input-section
+     (render-input-form fn-args)]
+    
+    ;; Log section
+    [:div.attempt-log-section
+     [:h2 "Test Log"]
+     (render-log-content log)]]
+   
+   [:div.attempt-navigation
+    (control-buttons-investigate)]])

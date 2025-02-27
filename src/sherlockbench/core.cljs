@@ -136,6 +136,7 @@
    :action-fn pass})
 
 (defn attempt-page [{{:keys [run-id attempt-id]} :path-params} store]
+  (restore-store run-id store)
   (let [attempts (:attempts @store)
         attempt (logic/find-attempt-by-id attempts attempt-id)
         attempt-log (get local-storage (str "attempt-" attempt-id))]
