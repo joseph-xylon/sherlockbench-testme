@@ -30,8 +30,24 @@
       ;; update the atom
       (reset! store run-data)
       ;; update the localStorage
-      (assoc! local-storage run-id run-data)
+      (assoc! local-storage (str "run-" run-id) run-data)
       ;; redirect to the index page
       (reitit-easy/push-state :index {:run-id run-id} {})
       )))
 
+(defn find-attempt-by-id [attempts attempt-id]
+  (first (filter #(= (:attempt-id %) attempt-id) attempts)))
+
+(defn if-run-complete [store run-id]
+  (let [attempts (:attempts @store)]
+    (when (every? #(= true (:completed %)) attempts)
+      (let [response (<! (http/post "http://localhost:3000/api/complete-run"
+                                    {:with-credentials? false
+                                     :json-params {:run-id run-id}}))]
+        true ;; todo finish this
+
+        )
+
+      )
+
+    ))

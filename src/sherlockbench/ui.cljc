@@ -43,3 +43,10 @@
      [:div {:style {:margin-top "20px"}}
       [:p "Complete all problems to finish the test. You can work on problems in any order."]]
      ]))
+
+(defn render-attempt-page
+  [run-id {:keys [attempt-id fn-args problem-name] :as attempt} log]
+  [:div
+   [:h1 (str "Attempt " problem-name)]
+   ]
+  )

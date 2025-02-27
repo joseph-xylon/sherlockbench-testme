@@ -57,7 +57,7 @@
        (reitit-easy/push-state :landing-anonymous {} {})
 
        ;; there is a query string with a uuid
-       (let [run-data (get local-storage run-id)]
+       (let [run-data (get local-storage (str "run-" run-id))]
          (if (nil? run-data)
            ;; we didn't start any run yet
            (go
@@ -71,6 +71,7 @@
              ;; get the localstorage data into the atom
              (reset! store run-data)
              ;; redirect to index
+             ;; TODO if run is complete they should see the results page
              (reitit-easy/push-state :index {:run-id run-id} {}))))))})
 
 (defn error-run-id-page [{{:keys [run-id]} :path-params} _]
@@ -126,13 +127,28 @@
 
 (defn restore-store [run-id store]
   (when (nil? @store)
-    (let [run-data (get local-storage run-id)]
+    (let [run-data (get local-storage (str "run-" run-id))]
       (reset! store run-data))))
 
 (defn index-page [{{:keys [run-id]} :path-params} store]
   (restore-store run-id store)
   {:hiccup (ui/index-content run-id store)
    :action-fn pass})
+
+(defn attempt-page [{{:keys [run-id attempt-id]} :path-params} store]
+  (let [attempts (:attempts @store)
+        attempt (logic/find-attempt-by-id attempts attempt-id)
+        attempt-log (get local-storage (str "attempt-" attempt-id))]
+
+    {:hiccup
+     (if attempt
+       (ui/render-attempt-page run-id attempt attempt-log)
+       [:div 
+        [:h1 "Problem Not Found"]
+        [:p "The requested problem could not be found."]
+        [:p [:a {:href (reitit-easy/href :index {:run-id run-id})} "Return to Index"]]])
+     :action-fn pass  ;; todo
+     }))
 
 (defn main []
   (let [el (js/document.getElementById "app")]
@@ -157,7 +173,11 @@
                                                   :parameters {:path {:run-id string?}}}]
                   ["/index/:run-id" {:name :index
                                     :view index-page
-                                    :parameters {:path {:run-id string?}}}]]]
+                                    :parameters {:path {:run-id string?}}}]
+                  ["/attempt/:run-id/:attempt-id" {:name :attempt
+                                                  :view attempt-page
+                                                  :parameters {:path {:run-id string?
+                                                                      :attempt-id string?}}}]]]
 
       ;; Initialize Reitit router
       (reitit-easy/start!
