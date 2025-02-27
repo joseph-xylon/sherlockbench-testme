@@ -12,12 +12,16 @@
 ;; - optionally a data transformation function. this just adapts
 ;;   the "business domain data" to the right format for the UI
 
+;; cute: "✓ Correct" "✗ Incorrect"
+
 (defn render-attempt-link [{:keys [attempt-id
                                    fn-args
                                    problem-name
                                    completed] :as attempt} run-id]
   [:li {:key attempt-id}
-   [:a {:href (reitit-easy/href :attempt {:run-id run-id :attempt-id attempt-id})}
+   [:a {:href "#"
+        :on {:click [[:action/prevent-default]
+                     [:action/goto-page :attempt {:run-id run-id :attempt-id attempt-id}]]}}
     [:span problem-name]
     (when completed
       [:span {:style {:color "green"
@@ -56,10 +60,15 @@
                      "text")]
     [:div.form-group
      [:label {:for id} (str "Input " (inc idx) " (" arg-type "):")]
-     [:input {:type input-type
-              :id id
-              :name id
-              :placeholder placeholder}]]))
+     (if (= arg-type "boolean")
+       [:select {:id id
+                 :name id}
+        [:option {:value "true"} "true"]
+        [:option {:value "false"} "false"]]
+       [:input {:type input-type
+                :id id
+                :name id
+                :placeholder placeholder}])]))
 
 (defn render-input-form [fn-args]
   [:form.attempt-form
@@ -74,27 +83,25 @@
 
 (defn render-log-content [log]
   [:div.log-container
-   (if (empty? log)
-     [:p.empty-log "No tests run yet. Submit a test to see results."]
-     [:ul.log-list
-      (map-indexed 
-       (fn [idx entry]
-         [:li.log-item {:key idx} 
-          [:div.log-entry
-           [:div.log-input [:span.label "Input: "] [:span.value (:input entry)]]
-           [:div.log-output [:span.label "Output: "] [:span.value (:output entry)]]
-           [:div.log-expected [:span.label "Expected: "] [:span.value (:expected entry)]]
-           [:div.log-result {:class (if (:success entry) "success" "failure")}
-            (if (:success entry) "✓ Correct" "✗ Incorrect")]]])
-       log)])])
+   log])
 
-(defn control-buttons-investigate []
-  '([:a.control-link {:href (reitit-easy/href :index {:run-id run-id})} "← Back to problem list"]
-    [:a.control-link {} "I'm Ready"]
-    [:a#abandon.control-link {} "Abandon"]))
+(defn control-buttons [run-id state]
+  (list
+   [:button.control {:on {:click [[:action/goto-page :index {:run-id run-id}]]}} "← Back to problem list"]
+   (when (= state :investigate) [:button.control {} "I'm Ready"])
+   [:button#abandon.control {} "Abandon"]))
+
+(comment
+  ;; example attempt map
+  {:attempt-id "cbb0a1dc-5d1f-4721-942e-d0b6e5ae36df",
+   :fn-args ["integer" "integer" "integer"]
+   :problem-name "Problem 1" 
+   :state :investigate ; :verify :completed :aborted
+   }
+  )
 
 (defn render-attempt-page
-  [run-id {:keys [attempt-id fn-args problem-name] :as attempt} log]
+  [run-id {:keys [attempt-id fn-args problem-name state] :as attempt} log]
   [:div.attempt-page
    [:h1 (str "Attempt: " problem-name)]
    [:p "Test the mystery function until you think you know what it does. Then
@@ -110,4 +117,4 @@
      (render-log-content log)]]
    
    [:div.attempt-navigation
-    (control-buttons-investigate)]])
+    (control-buttons run-id state)]])

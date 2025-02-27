@@ -10,6 +10,14 @@
 ;; Functions in this file will be called from core.cljs.
 ;; Usually from the global event handler: https://replicant.fun/event-handlers/
 
+(defn process-attempts 
+  "Processes attempt data by adding problem name and initial state"
+  [attempts]
+  (map #(assoc %1 
+               :problem-name (str "Problem " %2)
+               :state :investigate)
+       attempts (range 1 js/Infinity)))
+
 (defn start-run [store run-id]
   (go
     (let [response (<! (http/post "http://localhost:3000/api/start-run"
@@ -17,9 +25,7 @@
                                    :json-params (cond-> {:client-id "sherlockbench-testme"}
                                                   (not (nil? run-id)) (assoc :existing-run-id run-id))}))
           {{:keys [run-id run-type benchmark-version attempts]} :body} response
-          attempts-named (map
-                          #(assoc %1 :problem-name (str "Problem " %2))
-                          attempts (range 1 js/Infinity))
+          attempts-named (process-attempts attempts)
           run-data {:run-id run-id
                     :run-type run-type
                     :benchmark-version benchmark-version

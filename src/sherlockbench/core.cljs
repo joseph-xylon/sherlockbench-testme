@@ -92,7 +92,7 @@
      "do record the results of the test in our system."]
     [:p "This is an example set of questions just to demonstrate how the test
    works. If you want to take the full test please " contact-us]
-    [:button {:on {:click [:start-run nil]}
+    [:button {:on {:click [:action/start-run nil]}
               :style {:margin-top 20
                       :font-size 20}}
      "Start Test"]]
@@ -156,10 +156,26 @@
 
     ;; Globally handle DOM events
     (r/set-dispatch!
-     (fn [_ [action & args]]
-       (case action
-         ;; :boop (apply swap! store logic/boop args)
-         :start-run (apply logic/start-run store args))))
+     (fn [{:keys [replicant/dom-event]} data]
+       ;; data will be a vector of vectors like:
+       ;; [[:event args] [:event args]]
+       ;; dom-event is handy for (.preventDefault dom-event)
+       (doseq [[action & args] data]
+         (prn action args)
+         (case action
+           :action/prevent-default
+           (.preventDefault dom-event)
+
+           :action/alert
+           (js/alert (first args))
+
+           :action/start-run
+           (apply logic/start-run store args)
+
+           :action/goto-page
+           (apply reitit-easy/push-state args)
+           
+           (prn "Unknown action:" data)))))
 
     ;; Define routes
     (let [routes [["/" {:name :home
