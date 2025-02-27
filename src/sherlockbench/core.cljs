@@ -10,22 +10,14 @@
             [cljs.pprint :refer [pprint]]
             [cljs-http.client :as http]
             [cljs.core.async :refer [<!]]
-            [hodgepodge.core :refer [local-storage clear!]]))
+            [hodgepodge.core :refer [local-storage clear!]]
+            [clojure.string :as str]))
 
 (def contact-us [:a {:href "mailto:joseph@xylon.me.uk"} "contact us"])
 
 (def pass (constantly nil))
 
 (defonce store (atom nil))
-
-(defn valid-run?
-  "Asynchronously checks if a given run-id references a valid run, returns a channel."
-  [run-id]
-  (go
-    (let [response (<! (http/post "http://localhost:3000/api/is-pending-run"
-                                  {:with-credentials? false
-                                   :json-params {:run-id run-id}}))]
-      (:response (:body response)))))
 
 ;; In this application, view functions follow a specific pattern to properly
 ;; separate rendering from side effects (like routing):
@@ -61,7 +53,7 @@
          (if (nil? run-data)
            ;; we didn't start any run yet
            (go
-             (if (<! (valid-run? run-id))
+             (if (<! (logic/valid-run? run-id))
                ;; it references a valid run
                (reitit-easy/push-state :landing-competition {:run-id run-id} {})
                (reitit-easy/push-state :error-run-id {:run-id run-id} {})))
@@ -125,6 +117,22 @@
 
    :action-fn pass})
 
+(defn collect-input-form-values []
+  (loop [idx 0
+         values []]
+    (let [input-el (js/document.getElementById (str "input-" idx))]
+      (if input-el
+        (let [value (.-value input-el)
+              form-type (-> input-el .-parentNode .-firstChild .-textContent
+                           (str/split #"\(|\)") second)]
+          (recur (inc idx)
+                 (conj values 
+                       (case form-type
+                         "integer" (js/parseInt value)
+                         "boolean" (= value "true")
+                         value))))
+        values))))
+
 (defn restore-store [run-id store]
   (when (nil? @store)
     (let [run-data (get local-storage (str "run-" run-id))]
@@ -174,6 +182,11 @@
 
            :action/goto-page
            (apply reitit-easy/push-state args)
+           
+           :action/test-mystery-function
+           (let [values (collect-input-form-values)]
+             (prn "Testing mystery function with values:" values)
+             pass)
            
            (prn "Unknown action:" data)))))
 

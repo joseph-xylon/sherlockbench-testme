@@ -81,13 +81,12 @@
 (defn render-input-form [fn-args]
   [:form.attempt-form
    [:h2 "Test the Mystery Function"]
-   (map-indexed 
-    (fn [idx arg-type]
-      ^{:key (str "input-field-" idx)}
-      (render-input-field arg-type idx))
+   (map-indexed
+    #(render-input-field %2 %1)
     fn-args)
    
-   [:button.submit-btn {:type "submit"} "Submit"]])
+   [:button.submit-btn {:on {:click [[:action/prevent-default]
+                                     [:action/test-mystery-function]]}} "Submit"]])
 
 (defn render-log-content [log]
   [:div.log-container

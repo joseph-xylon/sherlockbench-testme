@@ -10,6 +10,15 @@
 ;; Functions in this file will be called from core.cljs.
 ;; Usually from the global event handler: https://replicant.fun/event-handlers/
 
+(defn valid-run?
+  "Asynchronously checks if a given run-id references a valid run, returns a channel."
+  [run-id]
+  (go
+    (let [response (<! (http/post "http://localhost:3000/api/is-pending-run"
+                                  {:with-credentials? false
+                                   :json-params {:run-id run-id}}))]
+      (:response (:body response)))))
+
 (defn process-attempts 
   "Processes attempt data by adding problem name and initial state"
   [attempts]
