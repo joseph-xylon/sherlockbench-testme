@@ -132,7 +132,7 @@
 
 (defn index-page [{{:keys [run-id]} :path-params} store]
   (restore-store run-id store)
-  {:hiccup (ui/index-content run-id store)
+  {:hiccup (ui/render-index-page run-id store)
    :action-fn pass})
 
 (defn attempt-page [{{:keys [run-id attempt-id]} :path-params} store]

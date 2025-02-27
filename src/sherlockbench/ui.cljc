@@ -15,18 +15,26 @@
 ;; cute: "✓ Correct" "✗ Incorrect"
 
 (defn render-attempt-link [{:keys [attempt-id
-                                   fn-args
                                    problem-name
-                                   completed] :as attempt} run-id]
+                                   fn-args
+                                   state] :as attempt} run-id]
   [:li {:key attempt-id}
-   [:a {:href "#"
-        :on {:click [[:action/prevent-default]
-                     [:action/goto-page :attempt {:run-id run-id :attempt-id attempt-id}]]}}
+   [:a (when (#{:investigate :verify} state)
+         {:href "#"
+          :on {:click [[:action/prevent-default]
+                       [:action/goto-page :attempt {:run-id run-id :attempt-id attempt-id}]]}})
     [:span problem-name]
-    (when completed
+    (case state
+      :completed
       [:span {:style {:color "green"
                       :font-weight "bold"}}
-       "✓ Completed"])]])
+       " ✓ Completed"]
+
+      :abandoned
+      [:span {:style {:color "darkred"
+                      :font-weight "bold"}}
+       " ⊗ Abandoned"]
+      nil)]])
 
 (defn render-attempts-list [run-id attempts]
   [:div
@@ -34,7 +42,7 @@
    [:ul {:style {:padding "0"}}
     (map #(render-attempt-link % run-id) attempts)]])
 
-(defn index-content
+(defn render-index-page
   [run-id store]
   (let [attempts (:attempts @store)
         run-type (:run-type @store)]
@@ -96,7 +104,7 @@
   {:attempt-id "cbb0a1dc-5d1f-4721-942e-d0b6e5ae36df",
    :fn-args ["integer" "integer" "integer"]
    :problem-name "Problem 1" 
-   :state :investigate ; :verify :completed :aborted
+   :state :investigate ; :verify :completed :abandoned
    }
   )
 
