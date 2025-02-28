@@ -10,6 +10,14 @@
 ;; Functions in this file will be called from core.cljs.
 ;; Usually from the global event handler: https://replicant.fun/event-handlers/
 
+(defn process-attempts 
+  "Processes attempt data by adding problem name and initial state"
+  [attempts]
+  (map #(assoc %1 
+               :problem-name (str "Problem " %2)
+               :state :investigate)
+       attempts (range 1 js/Infinity)))
+
 (defn valid-run?
   "Asynchronously checks if a given run-id references a valid run, returns a channel."
   [run-id]
@@ -18,14 +26,6 @@
                                   {:with-credentials? false
                                    :json-params {:run-id run-id}}))]
       (:response (:body response)))))
-
-(defn process-attempts 
-  "Processes attempt data by adding problem name and initial state"
-  [attempts]
-  (map #(assoc %1 
-               :problem-name (str "Problem " %2)
-               :state :investigate)
-       attempts (range 1 js/Infinity)))
 
 (defn start-run [store run-id]
   (go
@@ -48,6 +48,19 @@
       (assoc! local-storage (str "run-" run-id) run-data)
       ;; redirect to the index page
       (reitit-easy/push-state :index {:run-id run-id} {})
+      )))
+
+(defn test-function [values log-store run-id attempt-id]
+  (go
+    (let [response (<! (http/post "http://localhost:3000/api/test-function"
+                                  {:with-credentials? false
+                                   :json-params {:run-id run-id
+                                                 :attempt-id attempt-id
+                                                 :args values}}))
+          {{output :output} :body} response]
+      
+      (swap! log-store conj [:p output])
+      ;; TODO: when will we update localstorage?
       )))
 
 (defn find-attempt-by-id [attempts attempt-id]

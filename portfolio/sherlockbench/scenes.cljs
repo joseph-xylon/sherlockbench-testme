@@ -20,15 +20,15 @@
   (ui/render-input-field "boolean" 0))
 
 (defscene input-form
-  (ui/render-input-form ["integer" "string" "boolean"]))
+  (ui/render-input-form "abc" "def" ["integer" "string" "boolean"]))
 
 (defscene empty-log
-  (ui/render-log-content `()))
+  (ui/render-log-content []))
 
 (defscene show-log
-  (ui/render-log-content '([:p "Hello"]
-                           [:p "do you"]
-                           [:p "like cats?"])))
+  (ui/render-log-content [[:p "Hello"]
+                          [:p "do you"]
+                          [:p "like cats?"]]))
 
 ;; Control buttons for different states
 (defscene buttons-investigating

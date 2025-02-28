@@ -18,6 +18,7 @@
 (def pass (constantly nil))
 
 (defonce store (atom nil))
+(defonce log-store (atom nil))
 
 ;; In this application, view functions follow a specific pattern to properly
 ;; separate rendering from side effects (like routing):
@@ -66,7 +67,7 @@
              ;; TODO if run is complete they should see the results page
              (reitit-easy/push-state :index {:run-id run-id} {}))))))})
 
-(defn error-run-id-page [{{:keys [run-id]} :path-params} _]
+(defn error-run-id-page [{{:keys [run-id]} :path-params} _ _]
   {:hiccup
    [:div
     [:h1 "Invalid Run"]
@@ -75,7 +76,7 @@
     [:p "If this is wrong please " contact-us]]
    :action-fn pass})
 
-(defn landing-anonymous-page [_ _]
+(defn landing-anonymous-page [_ _ _]
   {:hiccup
    [:div
     [:h1 "Take the SherlochBench test!"]
@@ -84,14 +85,14 @@
      "do record the results of the test in our system."]
     [:p "This is an example set of questions just to demonstrate how the test
    works. If you want to take the full test please " contact-us]
-    [:button {:on {:click [:action/start-run nil]}
+    [:button {:on {:click [[:action/start-run nil]]}
               :style {:margin-top 20
                       :font-size 20}}
      "Start Test"]]
    
    :action-fn pass})
 
-(defn landing-competition-page [{{:keys [run-id]} :path-params} _]
+(defn landing-competition-page [{{:keys [run-id]} :path-params} _ _]
   {:hiccup
    [:div
     [:h1 "Take the SherlochBench test!"]
@@ -110,7 +111,7 @@
     [:p "Once you start you will have 24 hours to complete the test."]
     [:p "The problems are not ordered by difficulty. If you find one "
      "too hard, skip it and come back to it later."]
-    [:button {:on {:click [:start-run run-id]}
+    [:button {:on {:click [[:action/start-run run-id]]}
               :style {:margin-top 20
                       :font-size 20}}
      "Start Test"]]
@@ -138,26 +139,41 @@
     (let [run-data (get local-storage (str "run-" run-id))]
       (reset! store run-data))))
 
-(defn index-page [{{:keys [run-id]} :path-params} store]
+(defn index-page [{{:keys [run-id]} :path-params} store _]
   (restore-store run-id store)
-  {:hiccup (ui/render-index-page run-id store)
+  {:hiccup (ui/render-index-page run-id @store)
    :action-fn pass})
 
-(defn attempt-page [{{:keys [run-id attempt-id]} :path-params} store]
+(defn attempt-page [{{:keys [run-id attempt-id]} :path-params} store el]
   (restore-store run-id store)
-  (let [attempts (:attempts @store)
-        attempt (logic/find-attempt-by-id attempts attempt-id)
-        attempt-log (get local-storage (str "attempt-" attempt-id))]
+  (let [attempt-log
+        (get local-storage (str "attempt-" attempt-id))
+
+        render-fn
+        (fn [run-data log]
+          (let [attempts (:attempts run-data)
+                attempt (logic/find-attempt-by-id attempts attempt-id)]
+
+            (if attempt
+              (ui/render-attempt-page run-id attempt log)
+              [:div 
+               [:h1 "Problem Not Found"]
+               [:p "The requested problem could not be found."]
+               [:p [:a {:href (reitit-easy/href :index {:run-id run-id})} "Return to Index"]]])))]
+
+    ;; restore the log from localStorage, or initialize it
+    (reset! log-store (or attempt-log []))
+    (prn "is it nil?")
+    (prn @log-store)
 
     {:hiccup
-     (if attempt
-       (ui/render-attempt-page run-id attempt attempt-log)
-       [:div 
-        [:h1 "Problem Not Found"]
-        [:p "The requested problem could not be found."]
-        [:p [:a {:href (reitit-easy/href :index {:run-id run-id})} "Return to Index"]]])
-     :action-fn pass  ;; todo
-     }))
+     (render-fn @store @log-store)
+
+     :action-fn
+     (fn []
+       (add-watch log-store ::render-log
+                  (fn [_ _ _ log]
+                    (r/render el (render-fn @store log)))))}))
 
 (defn main []
   (let [el (js/document.getElementById "app")]
@@ -186,7 +202,7 @@
            :action/test-mystery-function
            (let [values (collect-input-form-values)]
              (prn "Testing mystery function with values:" values)
-             pass)
+             (apply logic/test-function values log-store args))
            
            (prn "Unknown action:" data)))))
 
@@ -199,15 +215,15 @@
                   ["/landing-anonymous" {:name :landing-anonymous
                                          :view landing-anonymous-page}]
                   ["/landing-competition/:run-id" {:name :landing-competition
-                                                  :view landing-competition-page
-                                                  :parameters {:path {:run-id string?}}}]
+                                                   :view landing-competition-page
+                                                   :parameters {:path {:run-id string?}}}]
                   ["/index/:run-id" {:name :index
-                                    :view index-page
-                                    :parameters {:path {:run-id string?}}}]
+                                     :view index-page
+                                     :parameters {:path {:run-id string?}}}]
                   ["/attempt/:run-id/:attempt-id" {:name :attempt
-                                                  :view attempt-page
-                                                  :parameters {:path {:run-id string?
-                                                                      :attempt-id string?}}}]]]
+                                                   :view attempt-page
+                                                   :parameters {:path {:run-id string?
+                                                                       :attempt-id string?}}}]]]
 
       ;; Initialize Reitit router
       (reitit-easy/start!
@@ -215,7 +231,7 @@
        (fn [match]
          (let [view-fn (get-in match [:data :view] (fn [_ _] {:hiccup [:div "Page not found"]
                                                               :action-fn pass}))
-               {:keys [hiccup action-fn]} (view-fn match store)]
+               {:keys [hiccup action-fn]} (view-fn match store el)]
            (r/render el hiccup)
            (action-fn)))
        {:use-fragment true}))))

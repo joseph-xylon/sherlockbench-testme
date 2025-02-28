@@ -43,9 +43,9 @@
     (map #(render-attempt-link % run-id) attempts)]])
 
 (defn render-index-page
-  [run-id store]
-  (let [attempts (:attempts @store)
-        run-type (:run-type @store)]
+  [run-id run-data]
+  (let [attempts (:attempts run-data)
+        run-type (:run-type run-data)]
 
     [:div
      [:h1 "SherlockBench Test"]
@@ -78,7 +78,7 @@
                 :name id
                 :placeholder placeholder}])]))
 
-(defn render-input-form [fn-args]
+(defn render-input-form [run-id attempt-id fn-args]
   [:form.attempt-form
    [:h2 "Test the Mystery Function"]
    (map-indexed
@@ -86,11 +86,11 @@
     fn-args)
    
    [:button.submit-btn {:on {:click [[:action/prevent-default]
-                                     [:action/test-mystery-function]]}} "Submit"]])
+                                     [:action/test-mystery-function run-id attempt-id]]}} "Submit"]])
 
 (defn render-log-content [log]
   [:div.log-container
-   log])
+   (seq log)])
 
 (defn control-buttons [run-id state]
   (list
@@ -116,7 +116,7 @@
    [:div.attempt-container
     ;; Input section
     [:div.attempt-input-section
-     (render-input-form fn-args)]
+     (render-input-form run-id attempt-id fn-args)]
     
     ;; Log section
     [:div.attempt-log-section
