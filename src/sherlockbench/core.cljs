@@ -8,6 +8,7 @@
             [sherlockbench.ui :as ui]
             [sherlockbench.utility :refer [valid-uuid?]]
             [sherlockbench.storage :as storage]
+            [sherlockbench.forms :as forms]
             [cljs.pprint :refer [pprint]]
             [cljs.core.async :refer [<!]]
             [clojure.string :as str]))
@@ -117,21 +118,6 @@
 
    :action-fn pass})
 
-(defn collect-input-form-values []
-  (loop [idx 0
-         values []]
-    (let [input-el (js/document.getElementById (str "input-" idx))]
-      (if input-el
-        (let [value (.-value input-el)
-              form-type (-> input-el .-parentNode .-firstChild .-textContent
-                           (str/split #"\(|\)") second)]
-          (recur (inc idx)
-                 (conj values 
-                       (case form-type
-                         "integer" (js/parseInt value)
-                         "boolean" (= value "true")
-                         value))))
-        values))))
 
 (defn restore-store [run-id store]
   (when (nil? @store)
@@ -197,9 +183,10 @@
            (apply reitit-easy/push-state args)
            
            :action/test-mystery-function
-           (let [values (collect-input-form-values)]
+           (let [values (forms/collect-input-form-values)]
              (prn "Testing mystery function with values:" values)
-             (apply logic/test-function values log-store args))
+             (apply logic/test-function values log-store args)
+             (forms/clear-input-form (count values)))
            
            (prn "Unknown action:" data)))))
 
