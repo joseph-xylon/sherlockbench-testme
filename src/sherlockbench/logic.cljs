@@ -4,7 +4,8 @@
             [cljs.pprint :refer [pprint]]
             [hodgepodge.core :refer [local-storage clear!]]
             [cljs.core.async :refer [<!]]
-            [reitit.frontend.easy :as reitit-easy])
+            [reitit.frontend.easy :as reitit-easy]
+            [clojure.string :as str])
   )
 
 ;; Functions in this file will be called from core.cljs.
@@ -59,8 +60,8 @@
                                                  :args values}}))
           {{output :output} :body} response]
       
-      (swap! log-store conj [:p output])
-      ;; TODO: when will we update localstorage?
+      (swap! log-store conj [:p (str (str/join ", " values) " → " output)])
+      (assoc! local-storage (str "attempt-" attempt-id) @log-store)
       )))
 
 (defn find-attempt-by-id [attempts attempt-id]

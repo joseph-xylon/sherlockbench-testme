@@ -163,8 +163,6 @@
 
     ;; restore the log from localStorage, or initialize it
     (reset! log-store (or attempt-log []))
-    (prn "is it nil?")
-    (prn @log-store)
 
     {:hiccup
      (render-fn @store @log-store)
