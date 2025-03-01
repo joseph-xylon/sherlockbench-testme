@@ -7,10 +7,9 @@
             [sherlockbench.logic :as logic]
             [sherlockbench.ui :as ui]
             [sherlockbench.utility :refer [valid-uuid?]]
+            [sherlockbench.storage :as storage]
             [cljs.pprint :refer [pprint]]
-            [cljs-http.client :as http]
             [cljs.core.async :refer [<!]]
-            [hodgepodge.core :refer [local-storage clear!]]
             [clojure.string :as str]))
 
 (def contact-us [:a {:href "mailto:joseph@xylon.me.uk"} "contact us"])
@@ -50,7 +49,7 @@
        (reitit-easy/push-state :landing-anonymous {} {})
 
        ;; there is a query string with a uuid
-       (let [run-data (get local-storage (str "run-" run-id))]
+       (let [run-data (storage/get-run run-id)]
          (if (nil? run-data)
            ;; we didn't start any run yet
            (go
@@ -136,7 +135,7 @@
 
 (defn restore-store [run-id store]
   (when (nil? @store)
-    (let [run-data (get local-storage (str "run-" run-id))]
+    (let [run-data (storage/get-run run-id)]
       (reset! store run-data))))
 
 (defn index-page [{{:keys [run-id]} :path-params} store _]
@@ -147,7 +146,7 @@
 (defn attempt-page [{{:keys [run-id attempt-id]} :path-params} store el]
   (restore-store run-id store)
   (let [attempt-log
-        (get local-storage (str "attempt-" attempt-id))
+        (storage/get-attempt attempt-id)
 
         render-fn
         (fn [run-data log]

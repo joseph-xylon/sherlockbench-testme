@@ -2,7 +2,7 @@
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [cljs-http.client :as http]
             [cljs.pprint :refer [pprint]]
-            [hodgepodge.core :refer [local-storage clear!]]
+            [sherlockbench.storage :as storage]
             [cljs.core.async :refer [<!]]
             [reitit.frontend.easy :as reitit-easy]
             [clojure.string :as str])
@@ -46,7 +46,7 @@
       ;; update the atom
       (reset! store run-data)
       ;; update the localStorage
-      (assoc! local-storage (str "run-" run-id) run-data)
+      (storage/set-run! run-id run-data)
       ;; redirect to the index page
       (reitit-easy/push-state :index {:run-id run-id} {})
       )))
@@ -61,7 +61,7 @@
           {{output :output} :body} response]
       
       (swap! log-store conj [:p (str (str/join ", " values) " → " output)])
-      (assoc! local-storage (str "attempt-" attempt-id) @log-store)
+      (storage/set-attempt! attempt-id @log-store)
       )))
 
 (defn find-attempt-by-id [attempts attempt-id]
