@@ -16,6 +16,9 @@
 (defscene number-input-field
   (ui/render-input-field "integer" 0))
 
+(defscene float-input-field
+  (ui/render-input-field "float" 0))
+
 (defscene boolean-input-field
   (ui/render-input-field "boolean" 0))
 
@@ -69,6 +72,19 @@
     :problem-name "Problem 2"
     :arg-spec ["string" "boolean"]
     :state :verify}
+   {:log [[:p "Hello"]
+          [:p "do you"]
+          [:p "like cats?"]]
+    :next-verification {:inputs [4 7]
+                        :output-type "boolean"}}))
+
+(defscene attempt-page-complete
+  (ui/render-attempt-page 
+   "748d4792-b63b-40c5-bb51-cab946bd3d30"
+   {:attempt-id "abc123"
+    :problem-name "Problem 2"
+    :arg-spec ["string" "boolean"]
+    :state :completed}
    {:log [[:p "Hello"]
           [:p "do you"]
           [:p "like cats?"]]

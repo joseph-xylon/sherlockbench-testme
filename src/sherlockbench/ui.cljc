@@ -58,16 +58,16 @@
 
 (defn render-input-field [arg-type idx]
   (let [id (str "input-" idx)
-        placeholder (case arg-type
-                      "string" "Enter text..."
-                      "integer" "Enter number..."
-                      "boolean" "true or false"
-                      "Enter value...")
+        human-type (case arg-type
+                     "string" "text"
+                     ("integer" "float") "number"
+                     "boolean" "true or false"
+                     "value")
         input-type (case arg-type
                      "integer" "number"
                      "text")]
     [:div.form-group
-     [:label {:for id} (str "Input " (inc idx) " (" arg-type "):")]
+     [:label {:for id} (str "Input " (inc idx) " (" human-type "):")]
      (if (= arg-type "boolean")
        [:select {:id id
                  :name id}
@@ -76,7 +76,7 @@
        [:input {:type input-type
                 :id id
                 :name id
-                :placeholder placeholder}])]))
+                :placeholder (str "Enter " human-type)}])]))
 
 (defn investigation-input-form [run-id attempt-id arg-spec]
   [:form.attempt-form
@@ -119,7 +119,12 @@
    [:button.control {:on {:click [[:action/goto-page :index {:run-id run-id}]]}} "← Back to problem list"]
    (when (= state :investigate)
      [:button.control {:on {:click [[:action/get-verification run-id attempt-id]]}} "I'm Ready"])
-   [:button#abandon.control {} "Abandon"]))
+   (case state
+     (:investigate :verify)
+     [:button#abandon.control {} "Abandon"]
+
+     (:completed :abandoned)
+     [:button#continue.control {} "Continue"])))
 
 (comment
   ;; example attempt map
@@ -143,17 +148,29 @@
    {:keys [log] :as attempt-data}]
 
   [:div.attempt-page
-   [:h1 (str "Attempt: " problem-name)]
-   (if (= state :investigate)
-       [:p "Test the mystery function until you think you know what it does. Then
+   [:h1 problem-name]
+   (case state
+     :investigate
+     [:p "Test the mystery function until you think you know what it does. Then
    click \"I'm Ready\" and the system will test you."]
-       [:p "Prove you have figured out what the function does."])
+
+     :verify
+     [:p "Prove you have figured out what the function does."]
+
+     :completed
+     [:p "You have completed this problem."])
+
    [:div.attempt-container
     ;; Input section
     [:div.attempt-input-section
-     (if (= state :investigate)
+     (case state
+       :investigate
        (investigation-input-form run-id attempt-id arg-spec)
-       (verification-input-form run-id attempt-id attempt-data))]
+
+       :verify
+       (verification-input-form run-id attempt-id attempt-data)
+
+       `())]
     
     ;; Log section
     [:div.attempt-log-section
