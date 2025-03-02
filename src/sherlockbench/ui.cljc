@@ -16,7 +16,7 @@
 
 (defn render-attempt-link [{:keys [attempt-id
                                    problem-name
-                                   fn-args
+                                   arg-spec
                                    state] :as attempt} run-id]
   [:li {:key attempt-id}
    [:a (when (#{:investigate :verify} state)
@@ -78,45 +78,68 @@
                 :name id
                 :placeholder placeholder}])]))
 
-(defn render-input-form [run-id attempt-id fn-args]
+(defn investigation-input-form [run-id attempt-id arg-spec]
   [:form.attempt-form
    [:h2 "Test the Mystery Function"]
    (map-indexed
     #(render-input-field %2 %1)
-    fn-args)
+    arg-spec)
    
    [:button.submit-btn {:on {:click [[:action/prevent-default]
                                      [:action/test-mystery-function run-id attempt-id]]}} "Submit"]])
+
+(defn verification-input-form [run-id attempt-id fn-args]
+  [:form.attempt-form
+   [:h2 "What will the output be with these inputs?"]
+   [:p ]
+   
+   [:button.submit-btn {:on {:click [[:action/prevent-default]
+                                     [:action/predict-fn-output run-id attempt-id]]}} "Submit"]])
 
 (defn render-log-content [log]
   [:div.log-container
    (seq log)])
 
-(defn control-buttons [run-id state]
+(defn control-buttons [run-id attempt-id state]
   (list
    [:button.control {:on {:click [[:action/goto-page :index {:run-id run-id}]]}} "← Back to problem list"]
-   (when (= state :investigate) [:button.control {} "I'm Ready"])
+   (when (= state :investigate)
+     [:button.control {:on {:click [[:action/get-verification run-id attempt-id]]}} "I'm Ready"])
    [:button#abandon.control {} "Abandon"]))
 
 (comment
   ;; example attempt map
   {:attempt-id "cbb0a1dc-5d1f-4721-942e-d0b6e5ae36df",
-   :fn-args ["integer" "integer" "integer"]
+   :arg-spec ["integer" "integer" "integer"]
    :problem-name "Problem 1" 
    :state :investigate ; :verify :completed :abandoned
    }
+
+  ;; state values: :investigate :verify :completed :abandoned
+
+  ;; example attempt-data
+  {:log []
+   :next-verification {:inputs [2 5]
+                       :output-type "integer"}}  ; "string" "boolean" "float"
   )
 
 (defn render-attempt-page
-  [run-id {:keys [attempt-id fn-args problem-name state] :as attempt} log]
+  [run-id
+   {:keys [attempt-id arg-spec problem-name state] :as attempt}
+   {:keys [log] :as attempt-data}]
+
   [:div.attempt-page
    [:h1 (str "Attempt: " problem-name)]
-   [:p "Test the mystery function until you think you know what it does. Then
+   (if (= state :investigate)
+       [:p "Test the mystery function until you think you know what it does. Then
    click \"I'm Ready\" and the system will test you."]
+       [:p "Prove you have figured out what the function does."])
    [:div.attempt-container
     ;; Input section
     [:div.attempt-input-section
-     (render-input-form run-id attempt-id fn-args)]
+     (if (= state :investigate)
+       (investigation-input-form run-id attempt-id arg-spec)
+       (verification-input-form run-id attempt-id arg-spec))]
     
     ;; Log section
     [:div.attempt-log-section
@@ -124,4 +147,4 @@
      (render-log-content log)]]
    
    [:div.attempt-navigation
-    (control-buttons run-id state)]])
+    (control-buttons run-id attempt-id state)]])

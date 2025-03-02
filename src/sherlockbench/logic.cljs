@@ -51,7 +51,7 @@
       (reitit-easy/push-state :index {:run-id run-id} {})
       )))
 
-(defn test-function [values log-store run-id attempt-id]
+(defn test-function [values attempt-store run-id attempt-id]
   (go
     (let [response (<! (http/post "http://localhost:3000/api/test-function"
                                   {:with-credentials? false
@@ -60,12 +60,45 @@
                                                  :args values}}))
           {{output :output} :body} response]
       
-      (swap! log-store conj [:p (str (str/join ", " values) " → " output)])
-      (storage/set-attempt! attempt-id @log-store)
+      (swap! attempt-store update :log conj [:p (str (str/join ", " values) " → " output)])
+      (storage/set-attempt! attempt-id @attempt-store)
       )))
 
 (defn find-attempt-by-id [attempts attempt-id]
   (first (filter #(= (:attempt-id %) attempt-id) attempts)))
+
+(defn update-attempt-by-id 
+  "Updates an attempt with the given attempt-id in the store, setting its state to the provided state.
+   Returns the updated store value."
+  [store attempt-id state]
+  (swap! store update :attempts 
+         (fn [attempts]
+           (map (fn [attempt]
+                  (if (= (:attempt-id attempt) attempt-id)
+                    (assoc attempt :state state)
+                    attempt))
+                attempts))))
+
+(defn get-verification [store attempt-store run-id attempt-id]
+  (go
+    (let [response (<! (http/post "http://localhost:3000/api/next-verification"
+                                  {:with-credentials? false
+                                   :json-params {:run-id run-id
+                                                 :attempt-id attempt-id}}))
+          {{:keys [next-verification output-type]} :body} response]
+
+      ;; update the atoms
+      (update-attempt-by-id store attempt-id :verify)
+      
+      (swap! attempt-store #(-> %
+                             (assoc :next-verification {:inputs next-verification
+                                                        :output-type output-type})
+                             (update :log conj [:h3 "Verifications"])))
+
+      ;; save to localstorage
+      (storage/set-attempt! attempt-id @attempt-store)
+      (storage/set-run! run-id @store)
+      )))
 
 (defn if-run-complete [store run-id]
   (let [attempts (:attempts @store)]
@@ -74,9 +107,4 @@
                                     {:with-credentials? false
                                      :json-params {:run-id run-id}}))]
         true ;; todo finish this
-
-        )
-
-      )
-
-    ))
+        ))))

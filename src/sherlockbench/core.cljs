@@ -18,7 +18,7 @@
 (def pass (constantly nil))
 
 (defonce store (atom nil))
-(defonce log-store (atom nil))
+(defonce attempt-store (atom nil))
 
 ;; In this application, view functions follow a specific pattern to properly
 ;; separate rendering from side effects (like routing):
@@ -131,32 +131,31 @@
 
 (defn attempt-page [{{:keys [run-id attempt-id]} :path-params} store el]
   (restore-store run-id store)
-  (let [attempt-log
+  (let [attempt-data
         (storage/get-attempt attempt-id)
 
         render-fn
-        (fn [run-data log]
-          (let [attempts (:attempts run-data)
+        (fn [attempt-data]
+          (let [attempts (:attempts @store)
                 attempt (logic/find-attempt-by-id attempts attempt-id)]
-
             (if attempt
-              (ui/render-attempt-page run-id attempt log)
+              (ui/render-attempt-page run-id attempt attempt-data)
               [:div 
                [:h1 "Problem Not Found"]
                [:p "The requested problem could not be found."]
                [:p [:a {:href (reitit-easy/href :index {:run-id run-id})} "Return to Index"]]])))]
 
-    ;; restore the log from localStorage, or initialize it
-    (reset! log-store (or attempt-log []))
+    ;; restore the attempt data from localStorage, or initialize it with empty log
+    (reset! attempt-store (or attempt-data {:log []}))
 
     {:hiccup
-     (render-fn @store @log-store)
+     (render-fn @attempt-store)
 
      :action-fn
      (fn []
-       (add-watch log-store ::render-log
-                  (fn [_ _ _ log]
-                    (r/render el (render-fn @store log)))))}))
+       (add-watch attempt-store ::render-attempt
+                  (fn [_ _ _ attempt-data]
+                    (r/render el (render-fn attempt-data)))))}))
 
 (defn main []
   (let [el (js/document.getElementById "app")]
@@ -185,8 +184,11 @@
            :action/test-mystery-function
            (let [values (forms/collect-input-form-values)]
              (prn "Testing mystery function with values:" values)
-             (apply logic/test-function values log-store args)
+             (apply logic/test-function values attempt-store args)
              (forms/clear-input-form (count values)))
+
+           :action/get-verification
+           (apply logic/get-verification store attempt-store args)
            
            (prn "Unknown action:" data)))))
 

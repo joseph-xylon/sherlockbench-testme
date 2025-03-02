@@ -20,7 +20,7 @@
   (ui/render-input-field "boolean" 0))
 
 (defscene input-form
-  (ui/render-input-form "abc" "def" ["integer" "string" "boolean"]))
+  (ui/investigation-input-form "abc" "def" ["integer" "string" "boolean"]))
 
 (defscene empty-log
   (ui/render-log-content []))
@@ -43,44 +43,44 @@
    "748d4792-b63b-40c5-bb51-cab946bd3d30"
    {:attempt-id "abc123"
     :problem-name "Problem 1"
-    :fn-args ["integer" "integer"]
+    :arg-spec ["integer" "integer"]
     :state :investigate}
-   '([:p "Hello"]
-     [:p "do you"]
-     [:p "like cats?"])))
+   {:log [[:p "Hello"]
+          [:p "do you"]
+          [:p "like cats?"]]}))
 
 (defscene attempt-page-verifying
   (ui/render-attempt-page 
    "748d4792-b63b-40c5-bb51-cab946bd3d30"
    {:attempt-id "abc123"
     :problem-name "Problem 2"
-    :fn-args ["string" "boolean"]
+    :arg-spec ["string" "boolean"]
     :state :verify}
-   '([:p "Hello"]
-     [:p "do you"]
-     [:p "like cats?"])))
+   {:log [[:p "Hello"]
+          [:p "do you"]
+          [:p "like cats?"]]}))
 
 ;; Index page example
 (defscene index-page
-  (let [mock-store (atom {:run-id "748d4792-b63b-40c5-bb51-cab946bd3d30"
-                          :run-type "practice"
-                          :benchmark-version "1.0"
-                          :attempts [{:attempt-id "abc123"
-                                      :problem-name "Problem 1"
-                                      :fn-args ["integer" "integer"]
-                                      :state :investigate}
-                                     {:attempt-id "def456"
-                                      :problem-name "Problem 2"
-                                      :fn-args ["string" "boolean"]
-                                      :state :verify}
-                                     {:attempt-id "ghi789"
-                                      :problem-name "Problem 3"
-                                      :fn-args ["boolean" "boolean"]
-                                      :state :completed}
-                                     {:attempt-id "hdy623"
-                                      :problem-name "Problem 4"
-                                      :fn-args ["boolean" "boolean"]
-                                      :state :abandoned}]})]
+  (let [mock-store {:run-id "748d4792-b63b-40c5-bb51-cab946bd3d30"
+                    :run-type "practice"
+                    :benchmark-version "1.0"
+                    :attempts [{:attempt-id "abc123"
+                                :problem-name "Problem 1"
+                                :arg-spec ["integer" "integer"]
+                                :state :investigate}
+                               {:attempt-id "def456"
+                                :problem-name "Problem 2"
+                                :arg-spec ["string" "boolean"]
+                                :state :verify}
+                               {:attempt-id "ghi789"
+                                :problem-name "Problem 3"
+                                :arg-spec ["boolean" "boolean"]
+                                :state :completed}
+                               {:attempt-id "hdy623"
+                                :problem-name "Problem 4"
+                                :arg-spec ["boolean" "boolean"]
+                                :state :abandoned}]}]
     (ui/render-index-page "748d4792-b63b-40c5-bb51-cab946bd3d30" mock-store)))
 
 (defn main []
