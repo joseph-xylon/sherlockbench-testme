@@ -124,6 +124,9 @@
 
           ;; write to log
           (swap! attempt-store update :log conj [:p "Verifications complete"])
+
+          ;; save to localstorage
+          (storage/set-run! run-id @store)
           (storage/set-attempt! attempt-id @attempt-store)
           )
 
