@@ -155,7 +155,9 @@
      (fn []
        (add-watch attempt-store ::render-attempt
                   (fn [_ _ _ attempt-data]
-                    (r/render el (render-fn attempt-data)))))}))
+                    (r/render el (render-fn attempt-data))
+                    ;; Scroll log container to bottom after rendering
+                    (js/setTimeout ui/scroll-log-container 10))))}))
 
 (defn main []
   (let [el (js/document.getElementById "app")]

@@ -105,6 +105,11 @@
      [:button.submit-btn {:on {:click [[:action/prevent-default]
                                        [:action/attempt-verification run-id attempt-id]]}} "Submit"]]))
 
+(defn scroll-log-container []
+  (when-let [container (js/document.querySelector ".log-container")]
+    (let [scroll-options (js-obj "top" (.-scrollHeight container) "behavior" "smooth")]
+      (.scrollTo container scroll-options))))
+
 (defn render-log-content [log]
   [:div.log-container
    (seq log)])
