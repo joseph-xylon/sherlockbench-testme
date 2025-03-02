@@ -29,7 +29,8 @@
    '({:attempt-id "2cc2ef98-3718-457e-b3db-8c5f93ba4d69",
       :arg-spec ["integer" "integer" "integer"],
       :problem-name "Problem 1",
-      :state :investigate}),
+      :state :investigate
+      :result :wrong}),  ; wrong/correct
    :run-id "233e6dab-227c-48c3-ab71-a99842d638a0",
    :benchmark-version "0.1.0"}
 

@@ -32,10 +32,10 @@
 
 ;; Control buttons for different states
 (defscene buttons-investigating
-  (ui/control-buttons "748d4792-b63b-40c5-bb51-cab946bd3d30" :investigate))
+  (ui/control-buttons "748d4792-b63b-40c5-bb51-cab946bd3d30" "748d4792-b63b-40c5-bb51-cab946bd3d30" :investigate))
 
 (defscene buttons-verifying
-  (ui/control-buttons "748d4792-b63b-40c5-bb51-cab946bd3d30" :verify))
+  (ui/control-buttons "748d4792-b63b-40c5-bb51-cab946bd3d30" "748d4792-b63b-40c5-bb51-cab946bd3d30" :verify))
 
 ;; Complete attempt page examples
 (defscene attempt-page-investigating
@@ -49,7 +49,7 @@
           [:p "do you"]
           [:p "like cats?"]]}))
 
-(defscene attempt-page-verifying
+(defscene attempt-page-verifying-number
   (ui/render-attempt-page 
    "748d4792-b63b-40c5-bb51-cab946bd3d30"
    {:attempt-id "abc123"
@@ -58,7 +58,22 @@
     :state :verify}
    {:log [[:p "Hello"]
           [:p "do you"]
-          [:p "like cats?"]]}))
+          [:p "like cats?"]]
+    :next-verification {:inputs [4 7]
+                        :output-type "integer"}}))
+
+(defscene attempt-page-verifying-boolean
+  (ui/render-attempt-page 
+   "748d4792-b63b-40c5-bb51-cab946bd3d30"
+   {:attempt-id "abc123"
+    :problem-name "Problem 2"
+    :arg-spec ["string" "boolean"]
+    :state :verify}
+   {:log [[:p "Hello"]
+          [:p "do you"]
+          [:p "like cats?"]]
+    :next-verification {:inputs [4 7]
+                        :output-type "boolean"}}))
 
 ;; Index page example
 (defscene index-page

@@ -88,13 +88,22 @@
    [:button.submit-btn {:on {:click [[:action/prevent-default]
                                      [:action/test-mystery-function run-id attempt-id]]}} "Submit"]])
 
-(defn verification-input-form [run-id attempt-id fn-args]
-  [:form.attempt-form
-   [:h2 "What will the output be with these inputs?"]
-   [:p ]
-   
-   [:button.submit-btn {:on {:click [[:action/prevent-default]
-                                     [:action/predict-fn-output run-id attempt-id]]}} "Submit"]])
+(defn verification-input-form [run-id attempt-id {{:keys [inputs output-type]} :next-verification}]
+  (let [input-type (case output-type
+                     "integer" "number"
+                     "text")]
+    [:form.attempt-form
+     [:h2 "What will the output be with these inputs?"]
+     [:div.form-group
+      [:label {:for "expected-out"} (str/join ", " inputs)]
+      (if (= output-type "boolean")
+        [:select#expected-out
+         [:option {:value "true"} "true"]
+         [:option {:value "false"} "false"]]
+        [:input#expected-out {:type input-type}])]
+     
+     [:button.submit-btn {:on {:click [[:action/prevent-default]
+                                       [:action/attempt-verification run-id attempt-id]]}} "Submit"]]))
 
 (defn render-log-content [log]
   [:div.log-container
@@ -139,7 +148,7 @@
     [:div.attempt-input-section
      (if (= state :investigate)
        (investigation-input-form run-id attempt-id arg-spec)
-       (verification-input-form run-id attempt-id arg-spec))]
+       (verification-input-form run-id attempt-id attempt-data))]
     
     ;; Log section
     [:div.attempt-log-section

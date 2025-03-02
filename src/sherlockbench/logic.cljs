@@ -68,18 +68,21 @@
   (first (filter #(= (:attempt-id %) attempt-id) attempts)))
 
 (defn update-attempt-by-id 
-  "Updates an attempt with the given attempt-id in the store, setting its state to the provided state.
-   Returns the updated store value."
-  [store attempt-id state]
+  "Updates an attempt with the given attempt-id in the store, setting the specified key to the provided value.
+   Returns the updated store value.
+   
+   Example: (update-attempt-by-id store attempt-id :state :verify)
+   Example: (update-attempt-by-id store attempt-id :completed true)"
+  [store attempt-id key value]
   (swap! store update :attempts 
          (fn [attempts]
            (map (fn [attempt]
                   (if (= (:attempt-id attempt) attempt-id)
-                    (assoc attempt :state state)
+                    (assoc attempt key value)
                     attempt))
                 attempts))))
 
-(defn get-verification [store attempt-store run-id attempt-id]
+(defn get-verification [store attempt-store run-id attempt-id & [message]]
   (go
     (let [response (<! (http/post "http://localhost:3000/api/next-verification"
                                   {:with-credentials? false
@@ -88,17 +91,46 @@
           {{:keys [next-verification output-type]} :body} response]
 
       ;; update the atoms
-      (update-attempt-by-id store attempt-id :verify)
+      (update-attempt-by-id store attempt-id :state :verify)
       
       (swap! attempt-store #(-> %
                              (assoc :next-verification {:inputs next-verification
                                                         :output-type output-type})
-                             (update :log conj [:h3 "Verifications"])))
+                             (update :log conj (or message [:h3 "Verifications"]))))
 
       ;; save to localstorage
       (storage/set-attempt! attempt-id @attempt-store)
       (storage/set-run! run-id @store)
       )))
+
+(defn attempt-verification [store attempt-store value run-id attempt-id]
+  (go
+    (let [response (<! (http/post "http://localhost:3000/api/attempt-verification"
+                                  {:with-credentials? false
+                                   :json-params {:run-id run-id
+                                                 :attempt-id attempt-id
+                                                 :prediction value}}))
+          {{:keys [status]} :body} response]  ; correct/done/wrong
+
+      (case status
+        ("wrong" "done")
+        (do
+          ;; set status to completed
+          (update-attempt-by-id store attempt-id :state :completed)
+
+          ;; record result as right or wrong
+          (update-attempt-by-id store attempt-id :result {{"done" "correct"
+                                                           "wrong" "wrong"} status})
+
+          ;; write to log
+          (swap! attempt-store update :log conj [:p "Verifications complete"])
+          (storage/set-attempt! attempt-id @attempt-store)
+          )
+
+        "correct"
+        (get-verification store attempt-store run-id attempt-id [:p "Verification successful. Next verification..."]))))
+
+  )
 
 (defn if-run-complete [store run-id]
   (let [attempts (:attempts @store)]

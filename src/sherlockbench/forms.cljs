@@ -19,6 +19,18 @@
                          value))))
         values))))
 
+(defn collect-verification-form-value
+  "Gets the value from a form element with ID expected-out"
+  []
+  (when-let [input-el (js/document.getElementById "expected-out")]
+    (.-value input-el)))
+
+(defn clear-verification-form
+  "Clears the value from a form element with ID expected-out"
+  []
+  (when-let [input-el (js/document.getElementById "expected-out")]
+    (set! (.-value input-el) "")))
+
 (defn clear-input-form
   "Clears all input values from form elements with IDs matching input-{n}"
   [values-count]

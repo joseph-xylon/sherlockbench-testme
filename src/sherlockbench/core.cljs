@@ -189,6 +189,11 @@
 
            :action/get-verification
            (apply logic/get-verification store attempt-store args)
+
+           :action/attempt-verification
+           (let [value (forms/collect-verification-form-value)]
+             (apply logic/attempt-verification store attempt-store value args)
+             (forms/clear-verification-form))
            
            (prn "Unknown action:" data)))))
 
