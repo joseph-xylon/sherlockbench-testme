@@ -161,7 +161,10 @@
      [:p "Prove you have figured out what the function does."]
 
      :completed
-     [:p "You have completed this problem."])
+     [:p "You have completed this problem."]
+
+     :abandoned
+     [:p "You have abandoned this problem."])
 
    [:div.attempt-container
     ;; Input section

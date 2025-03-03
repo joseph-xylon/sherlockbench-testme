@@ -91,6 +91,19 @@
     :next-verification {:inputs [4 7]
                         :output-type "boolean"}}))
 
+(defscene attempt-page-abandoned
+  (ui/render-attempt-page 
+   "748d4792-b63b-40c5-bb51-cab946bd3d30"
+   {:attempt-id "abc123"
+    :problem-name "Problem 2"
+    :arg-spec ["string" "boolean"]
+    :state :abandoned}
+   {:log [[:p "Hello"]
+          [:p "do you"]
+          [:p "like cats?"]]
+    :next-verification {:inputs [4 7]
+                        :output-type "boolean"}}))
+
 ;; Index page example
 (defscene index-page
   (let [mock-store {:run-id "748d4792-b63b-40c5-bb51-cab946bd3d30"
