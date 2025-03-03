@@ -117,11 +117,14 @@
 (defn control-buttons [run-id attempt-id state]
   (list
    [:button.control {:on {:click [[:action/goto-page :index {:run-id run-id}]]}} "← Back to problem list"]
+
    (when (= state :investigate)
      [:button.control {:on {:click [[:action/get-verification run-id attempt-id]]}} "I'm Ready"])
+
    (case state
      (:investigate :verify)
-     [:button#abandon.control {} "Abandon"]
+     [:button#abandon.control {:on {:click [[:action/prompt-abandon run-id attempt-id]
+                                            [:action/goto-page :index {:run-id run-id}]]}} "Abandon"]
 
      (:completed :abandoned)
      [:button#continue.control {} "Continue"])))

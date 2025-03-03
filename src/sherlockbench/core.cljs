@@ -181,8 +181,17 @@
            (apply logic/start-run store args)
 
            :action/goto-page
-           (apply reitit-easy/push-state args)
+           (do
+             (remove-watch attempt-store ::render-attempt)
+             (apply reitit-easy/push-state args))
            
+           :action/prompt-abandon
+           (if (.confirm js/window "Are you sure you want to abandon this problem?")
+             (let [[run-id attempt-id] args]
+               (logic/update-attempt-by-id store attempt-id :state :abandoned)
+               (storage/set-run! run-id @store))
+             )
+
            :action/test-mystery-function
            (let [values (forms/collect-input-form-values)]
              (prn "Testing mystery function with values:" values)
