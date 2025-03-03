@@ -127,7 +127,7 @@
                                             [:action/goto-page :index {:run-id run-id}]]}} "Abandon"]
 
      (:completed :abandoned)
-     [:button#continue.control {} "Continue"])))
+     [:button#continue.control {:on {:click [[:action/goto-next-problem run-id attempt-id]]}} "Continue"])))
 
 (comment
   ;; example attempt map

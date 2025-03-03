@@ -67,6 +67,19 @@
 (defn find-attempt-by-id [attempts attempt-id]
   (first (filter #(= (:attempt-id %) attempt-id) attempts)))
 
+(defn find-next-problem 
+  "Finds the next problem that isn't completed or abandoned"
+  [attempts current-attempt-id]
+  (let [current-index (->> attempts
+                           (map-indexed vector)
+                           (filter #(= (:attempt-id (second %)) current-attempt-id))
+                           first
+                           first)
+        remaining-attempts (->> attempts
+                                (drop (inc current-index))
+                                (filter #(not (#{:completed :abandoned} (:state %)))))]
+    (first remaining-attempts)))
+
 (defn update-attempt-by-id 
   "Updates an attempt with the given attempt-id in the store, setting the specified key to the provided value.
    Returns the updated store value.

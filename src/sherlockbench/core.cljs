@@ -192,6 +192,20 @@
                (storage/set-run! run-id @store))
              )
 
+           :action/goto-next-problem
+           (let [[run-id current-attempt-id] args
+                 attempts (:attempts @store)
+                 next-problem (logic/find-next-problem attempts current-attempt-id)]
+             (if next-problem
+               ;; If there's a next problem, navigate to it
+               (do
+                 (remove-watch attempt-store ::render-attempt)
+                 (reitit-easy/push-state :attempt {:run-id run-id :attempt-id (:attempt-id next-problem)} {}))
+               ;; Otherwise, go back to index
+               (do
+                 (remove-watch attempt-store ::render-attempt)
+                 (reitit-easy/push-state :index {:run-id run-id} {}))))
+
            :action/test-mystery-function
            (let [values (forms/collect-input-form-values)]
              (prn "Testing mystery function with values:" values)
