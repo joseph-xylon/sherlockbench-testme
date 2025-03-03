@@ -111,6 +111,7 @@
     [:p "Once you start you will have 24 hours to complete the test."]
     [:p "The problems are not ordered by difficulty. If you find one "
      "too hard, skip it and come back to it later."]
+    [:p "You may use a calculator if it helps."]
     [:button {:on {:click [[:action/start-run run-id]]}
               :style {:margin-top 20
                       :font-size 20}}
