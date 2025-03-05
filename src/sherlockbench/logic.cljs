@@ -148,6 +148,19 @@
 
   )
 
+(defn add-function-names
+  "warning: Claude wrote this and the tests too and I haven't groked it"
+  [attempts problem-names]
+  (let [id-to-function-name (reduce (fn [acc {:keys [id function_name]}]
+                                      (assoc acc id function_name))
+                                    {}
+                                    problem-names)]
+    (map (fn [attempt]
+           (if-let [function-name (get id-to-function-name (:attempt-id attempt))]
+             (assoc attempt :function_name function-name)
+             attempt))
+         attempts)))
+
 (defn submit-run [store run-id]
   (go
     (let [attempts (:attempts @store)]
@@ -161,16 +174,14 @@
         (swap! store
                #(-> %
                     (assoc :run-state :submitted
-                           :final-score score)))
-
-        ;; TODO add :real-name to each attempt
-
+                           :final-score score
+                           :attempts (add-function-names attempts problem-names))))
 
         (prn "SCORE")
         (pprint score)
-        (prn "PROBLEM-NAMES")
-        (pprint problem-names)
 
+        (prn "STORE")
+        (pprint @store)
         ;; save to localstorage
         (storage/set-run! run-id @store)
         ))))
