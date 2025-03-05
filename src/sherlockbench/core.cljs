@@ -36,13 +36,17 @@
 ;; - Keeps rendering functions pure (React-like philosophy)
 ;; - Makes the code more maintainable and easier to reason about
 
+(defn redirect-placeholder [s]
+  [:div
+   [:h1 s]
+   [:p "If you see this for more than a few seconds something "
+    "is broken. Please " contact-us]])
+
 (defn root
   "Checks the state and redirects as appropriate, asynchronously."
   [{{{run-id :run-id} :query} :parameters :as match} store]
-  {:hiccup [:div
-            [:h1 "Please Wait..."]
-            [:p "If you see this for more than a few seconds something "
-             "is broken. Please " contact-us]]
+  {:hiccup (redirect-placeholder "Please Wait...")
+   
    :action-fn
    (fn []
      (if (not (valid-uuid? run-id))
@@ -127,8 +131,41 @@
 
 (defn index-page [{{:keys [run-id]} :path-params} store _]
   (restore-store run-id store)
-  {:hiccup (ui/render-index-page run-id @store)
-   :action-fn pass})
+
+  (let [results-redirect
+        (fn [] (reitit-easy/push-state :results {:run-id run-id} {}))]
+
+    (if (= :submitted (:run-state @store))
+      {:hiccup
+       (redirect-placeholder "Redirecting to Results...")
+       
+       :action-fn
+       results-redirect}
+
+      (let [attempts (:attempts @store)]
+        (if (every? (fn [x] (#{:completed :abandoned} (:state x))) attempts)
+          ;; submit the run
+          {:hiccup
+           (redirect-placeholder "Test Complete. Submitting...")
+       
+           :action-fn
+           (fn []
+             (logic/submit-run store run-id)
+             (results-redirect))}
+
+          ;; render page normally
+          {:hiccup
+           (ui/render-index-page run-id @store)
+
+           :action-fn
+           pass})))))
+
+(defn results-page [{{:keys [run-id]} :path-params} store _]
+  {:hiccup
+   (ui/render-results-page run-id @store)
+
+   :action-fn
+   pass})
 
 (defn attempt-page [{{:keys [run-id attempt-id]} :path-params} store el]
   (restore-store run-id store)
@@ -224,23 +261,39 @@
            (prn "Unknown action:" data)))))
 
     ;; Define routes
-    (let [routes [["/" {:name :home
-                        :view root}]
-                  ["/error-run-id/:run-id" {:name :error-run-id
-                                            :view error-run-id-page
-                                            :parameters {:path {:run-id string?}}}]
-                  ["/landing-anonymous" {:name :landing-anonymous
-                                         :view landing-anonymous-page}]
-                  ["/landing-competition/:run-id" {:name :landing-competition
-                                                   :view landing-competition-page
-                                                   :parameters {:path {:run-id string?}}}]
-                  ["/index/:run-id" {:name :index
-                                     :view index-page
-                                     :parameters {:path {:run-id string?}}}]
-                  ["/attempt/:run-id/:attempt-id" {:name :attempt
-                                                   :view attempt-page
-                                                   :parameters {:path {:run-id string?
-                                                                       :attempt-id string?}}}]]]
+    (let [routes [["/"
+                   {:name :home
+                    :view root}]
+                  
+                  ["/error-run-id/:run-id"
+                   {:name :error-run-id
+                    :view error-run-id-page
+                    :parameters {:path {:run-id string?}}}]
+                  
+                  ["/landing-anonymous"
+                   {:name :landing-anonymous
+                    :view landing-anonymous-page}]
+                  
+                  ["/landing-competition/:run-id"
+                   {:name :landing-competition
+                    :view landing-competition-page
+                    :parameters {:path {:run-id string?}}}]
+                  
+                  ["/index/:run-id"
+                   {:name :index
+                    :view index-page
+                    :parameters {:path {:run-id string?}}}]
+
+                  ["/results/:run-id"
+                   {:name :results
+                    :view results-page
+                    :parameters {:path {:run-id string?}}}]
+                  
+                  ["/attempt/:run-id/:attempt-id"
+                   {:name :attempt
+                    :view attempt-page
+                    :parameters {:path {:run-id string?
+                                        :attempt-id string?}}}]]]
 
       ;; Initialize Reitit router
       (reitit-easy/start!

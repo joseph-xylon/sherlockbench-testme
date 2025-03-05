@@ -148,11 +148,29 @@
 
   )
 
-(defn if-run-complete [store run-id]
-  (let [attempts (:attempts @store)]
-    (when (every? #(= true (:completed %)) attempts)
-      (let [response (<! (http/post "http://localhost:3000/api/complete-run"
-                                    {:with-credentials? false
-                                     :json-params {:run-id run-id}}))]
-        true ;; todo finish this
+(defn submit-run [store run-id]
+  (go
+    (let [attempts (:attempts @store)]
+      (let [response
+            (<! (http/post "http://localhost:3000/api/complete-run"
+                           {:with-credentials? false
+                            :json-params {:run-id run-id}}))
+
+            {{:keys [score problem-names]} :body} response]
+        
+        (swap! store
+               #(-> %
+                    (assoc :run-state :submitted
+                           :final-score score)))
+
+        ;; TODO add :real-name to each attempt
+
+
+        (prn "SCORE")
+        (pprint score)
+        (prn "PROBLEM-NAMES")
+        (pprint problem-names)
+
+        ;; save to localstorage
+        (storage/set-run! run-id @store)
         ))))

@@ -56,6 +56,16 @@
       [:p "Complete all problems to finish the test. You can work on problems in any order."]]
      ]))
 
+(defn render-results-page
+  [run-id run-data]
+  (let [attempts (:attempts run-data)
+        run-type (:run-type run-data)]
+
+    [:div
+     [:h1 "Results"]
+     [:p "Coming Soon"]]
+    ))
+
 (defn render-input-field [arg-type idx]
   (let [id (str "input-" idx)
         human-type (case arg-type
