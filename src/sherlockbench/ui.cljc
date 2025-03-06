@@ -43,27 +43,56 @@
     (map #(render-attempt-link % run-id) attempts)]])
 
 (defn render-index-page
-  [run-id run-data]
-  (let [attempts (:attempts run-data)
-        run-type (:run-type run-data)]
+  [run-id {:keys [attempts run-type]}]
+  [:div
+   [:h1 "SherlockBench Test"]
+   (when (seq attempts)
+     (render-attempts-list run-id attempts))
 
-    [:div
-     [:h1 "SherlockBench Test"]
-     (when (seq attempts)
-       (render-attempts-list run-id attempts))
+   [:div {:style {:margin-top "20px"}}
+    [:p "Complete all problems to finish the test. You can work on problems in any order."]]
+   ])
 
-     [:div {:style {:margin-top "20px"}}
-      [:p "Complete all problems to finish the test. You can work on problems in any order."]]
-     ]))
+(defn render-result-link [{:keys [attempt-id
+                                   problem-name
+                                   function_name
+                                   arg-spec
+                                   state] :as attempt} run-id]
+  [:li {:key attempt-id}
+   [:a (when (#{:investigate :verify} state)
+         {:href "#"
+          :on {:click [[:action/prevent-default]
+                       [:action/goto-page :attempt {:run-id run-id :attempt-id attempt-id}]]}})
+    [:span problem-name]
+    (case state
+      :completed
+      [:span {:style {:color "green"
+                      :font-weight "bold"}}
+       " ✓ Completed"]
+
+      :abandoned
+      [:span {:style {:color "darkred"
+                      :font-weight "bold"}}
+       " ⊗ Abandoned"]
+      nil)]])
+
+(defn render-results-list [run-id attempts]
+  [:div
+   [:h2 "Breakdown:"]
+   [:ul {:style {:padding "0"}}
+    (map #(render-result-link % run-id) attempts)]])
 
 (defn render-results-page
-  [run-id run-data]
-  (let [attempts (:attempts run-data)
-        run-type (:run-type run-data)]
+  [run-id {:keys [final-score attempts run-type] :as run-data}]
+  (prn "FINAL SCORE---")
+  (pprint final-score)
+  (let []
 
     [:div
      [:h1 "Results"]
-     [:p "Coming Soon"]]
+     [:p (str "Your over-all score: " (:numerator final-score) "/" (:denominator final-score))]
+
+     (render-attempts-list run-id attempts)]
     ))
 
 (defn render-input-field [arg-type idx]

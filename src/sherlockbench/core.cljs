@@ -150,8 +150,11 @@
        
            :action-fn
            (fn []
-             (logic/submit-run store run-id)
-             (results-redirect))}
+             (go
+               ;; Wait for submit-run to complete before redirecting
+               (<! (logic/submit-run store run-id))
+               ;; Now that submission is complete, redirect to results
+               (results-redirect)))}
 
           ;; render page normally
           {:hiccup
@@ -161,6 +164,8 @@
            pass})))))
 
 (defn results-page [{{:keys [run-id]} :path-params} store _]
+  (restore-store run-id store)
+
   {:hiccup
    (ui/render-results-page run-id @store)
 

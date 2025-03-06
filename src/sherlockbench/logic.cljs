@@ -169,7 +169,10 @@
              attempt))
          attempts)))
 
-(defn submit-run [store run-id]
+(defn submit-run 
+  "Submits the completed run to the server and returns a channel that
+   completes when the submission is done"
+  [store run-id]
   (go
     (let [attempts (:attempts @store)]
       (let [response
@@ -192,4 +195,6 @@
         (pprint @store)
         ;; save to localstorage
         (storage/set-run! run-id @store)
-        ))))
+        
+        ;; Return true to signal completion
+        true))))
