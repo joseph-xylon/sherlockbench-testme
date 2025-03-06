@@ -32,8 +32,7 @@
   (go
     (let [response (<! (http/post "http://localhost:3000/api/start-run"
                                   {:with-credentials? false
-                                   :json-params (cond-> {:client-id "sherlockbench-testme"
-                                                         :subset :easy3}
+                                   :json-params (cond-> {:client-id "sherlockbench-testme"}
                                                   (not (nil? run-id)) (assoc :existing-run-id run-id))}))
           {{:keys [run-id run-type benchmark-version attempts]} :body} response
           attempts-named (process-attempts attempts)
