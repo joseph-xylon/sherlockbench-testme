@@ -226,7 +226,9 @@
            :action/prompt-abandon
            (if (.confirm js/window "Are you sure you want to abandon this problem?")
              (let [[run-id attempt-id] args]
-               (logic/update-attempt-by-id store attempt-id :state :abandoned)
+               (logic/update-attempt-by-id store attempt-id
+                                           :state :abandoned
+                                           :result :abandoned)
                (storage/set-run! run-id @store))
              )
 

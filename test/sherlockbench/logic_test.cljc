@@ -81,6 +81,30 @@
            (logic/add-function-names [] [{:id "test-id", :function_name "test"}]))
         "Should return empty list when attempts is empty")))
 
+(deftest update-attempt-by-id-test
+  (testing "update-attempt-by-id with single key-value pair"
+    (let [store (atom {:attempts [{:attempt-id "1", :state :investigate}
+                                  {:attempt-id "2", :state :investigate}]})
+          _ (logic/update-attempt-by-id store "1" :state :verify)
+          expected {:attempts [{:attempt-id "1", :state :verify}
+                               {:attempt-id "2", :state :investigate}]}]
+      (is (= expected @store)
+          "Should update a single key-value pair")))
+  
+  (testing "update-attempt-by-id with multiple key-value pairs"
+    (let [store (atom {:attempts [{:attempt-id "1", :state :investigate}
+                                  {:attempt-id "2", :state :investigate}]})
+          _ (logic/update-attempt-by-id store "1" :state :completed :result "correct")
+          expected {:attempts [{:attempt-id "1", :state :completed, :result "correct"}
+                               {:attempt-id "2", :state :investigate}]}]
+      (is (= expected @store)
+          "Should update multiple key-value pairs at once")))
+  
+  (testing "update-attempt-by-id validation of key-value pairs"
+    (let [store (atom {:attempts [{:attempt-id "1", :state :investigate}]})]
+      (is (thrown? js/Error (logic/update-attempt-by-id store "1" :state))
+          "Should throw an error when given odd number of arguments"))))
+
 (comment
   (run-tests)
 )

@@ -32,7 +32,8 @@
   (go
     (let [response (<! (http/post "http://localhost:3000/api/start-run"
                                   {:with-credentials? false
-                                   :json-params (cond-> {:client-id "sherlockbench-testme"}
+                                   :json-params (cond-> {:client-id "sherlockbench-testme"
+                                                         :subset :easy3}
                                                   (not (nil? run-id)) (assoc :existing-run-id run-id))}))
           {{:keys [run-id run-type benchmark-version attempts]} :body} response
           attempts-named (process-attempts attempts)
@@ -81,17 +82,25 @@
     (first remaining-attempts)))
 
 (defn update-attempt-by-id 
-  "Updates an attempt with the given attempt-id in the store, setting the specified key to the provided value.
+  "Updates an attempt with the given attempt-id in the store, setting the specified keys to the provided values.
    Returns the updated store value.
    
+   Can be called with a single key-value pair:
    Example: (update-attempt-by-id store attempt-id :state :verify)
-   Example: (update-attempt-by-id store attempt-id :completed true)"
-  [store attempt-id key value]
+   Example: (update-attempt-by-id store attempt-id :completed true)
+   
+   Or with multiple key-value pairs:
+   Example: (update-attempt-by-id store attempt-id :state :verify :completed true)
+   Example: (update-attempt-by-id store attempt-id :result \"correct\" :state :completed)"
+  [store attempt-id & kvs]
+  (when (odd? (count kvs))
+    (throw (js/Error. "update-attempt-by-id requires an even number of key-value arguments")))
+  
   (swap! store update :attempts 
          (fn [attempts]
            (map (fn [attempt]
                   (if (= (:attempt-id attempt) attempt-id)
-                    (assoc attempt key value)
+                    (apply assoc attempt kvs)
                     attempt))
                 attempts))))
 
@@ -128,12 +137,11 @@
       (case status
         ("wrong" "done")
         (do
-          ;; set status to completed
-          (update-attempt-by-id store attempt-id :state :completed)
-
-          ;; record result as right or wrong
-          (update-attempt-by-id store attempt-id :result {{"done" "correct"
-                                                           "wrong" "wrong"} status})
+          ;; set status to completed and record result as right or wrong
+          (update-attempt-by-id store attempt-id 
+                               :state :completed
+                               :result ({"done" :correct
+                                         "wrong" :wrong} status))
 
           ;; write to log
           (swap! attempt-store update :log conj [:p "Verifications complete"])

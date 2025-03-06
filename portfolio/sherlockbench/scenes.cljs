@@ -127,6 +127,32 @@
                                 :state :abandoned}]}]
     (ui/render-index-page "748d4792-b63b-40c5-bb51-cab946bd3d30" mock-store)))
 
+(defscene results-page
+  (let [mock-store {:run-id "748d4792-b63b-40c5-bb51-cab946bd3d30"
+                    :run-type "practice"
+                    :benchmark-version "1.0"
+                    :run-state :submitted,
+                    :final-score {:numerator 1, :denominator 3},
+                    :attempts [{:attempt-id "f19e2768-c7e9-4547-8cad-21e70eb3b97b",
+                                :arg-spec ["integer" "integer" "integer"],
+                                :problem-name "Problem 1",
+                                :state :completed,
+                                :result :correct,
+                                :function_name "add & subtract"}
+                               {:attempt-id "73c9036d-3974-4ec8-abf9-d03b6794629a",
+                                :arg-spec ["integer"],
+                                :problem-name "Problem 2",
+                                :state :completed,
+                                :result :wrong,
+                                :function_name "is prime"}
+                               {:attempt-id "139d3722-6c7a-4c31-a60a-b681c03326d5",
+                                :arg-spec ["integer"],
+                                :problem-name "Problem 3",
+                                :state :abandoned,
+                                :result :abandoned,
+                                :function_name "modulus 3 to fruit"}]}]
+    (ui/render-results-page "748d4792-b63b-40c5-bb51-cab946bd3d30" mock-store)))
+
 (defn main []
   (portfolio/start!
    {:config
