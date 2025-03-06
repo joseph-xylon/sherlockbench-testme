@@ -161,6 +161,10 @@ td, th {
   border-bottom: 1px solid #f1f1f1;
 }
 
+thead th {
+  font-weight: bold;
+}
+
 /* Buttons, forms and input */
 input, textarea {
   border: 1px solid #4a4a4a;

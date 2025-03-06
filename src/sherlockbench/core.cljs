@@ -68,7 +68,7 @@
              ;; get the localstorage data into the atom
              (reset! store run-data)
              ;; redirect to index
-             ;; TODO if run is complete they should see the results page
+             ;; n.b. if run is complete the index page will redirect to results
              (reitit-easy/push-state :index {:run-id run-id} {}))))))})
 
 (defn error-run-id-page [{{:keys [run-id]} :path-params} _ _]

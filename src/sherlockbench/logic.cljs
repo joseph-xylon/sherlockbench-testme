@@ -188,11 +188,6 @@
                            :final-score score
                            :attempts (add-function-names attempts problem-names))))
 
-        (prn "SCORE")
-        (pprint score)
-
-        (prn "STORE")
-        (pprint @store)
         ;; save to localstorage
         (storage/set-run! run-id @store)
         

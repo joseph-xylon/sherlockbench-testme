@@ -56,44 +56,46 @@
 (defn render-result-link [{:keys [attempt-id
                                    problem-name
                                    function_name
-                                   arg-spec
-                                   state] :as attempt} run-id]
-  [:li {:key attempt-id}
-   [:a (when (#{:investigate :verify} state)
-         {:href "#"
-          :on {:click [[:action/prevent-default]
-                       [:action/goto-page :attempt {:run-id run-id :attempt-id attempt-id}]]}})
-    [:span problem-name]
-    (case state
-      :completed
-      [:span {:style {:color "green"
-                      :font-weight "bold"}}
-       " ✓ Completed"]
+                                   result] :as attempt} run-id]
+  [:tr {:key attempt-id}
+   [:td problem-name]
+   [:td function_name]
+   (case result
+     :correct
+     [:td {:style {:color "green"
+                   :font-weight "bold"}}
+      " ✓ Correct"]
 
-      :abandoned
-      [:span {:style {:color "darkred"
-                      :font-weight "bold"}}
-       " ⊗ Abandoned"]
-      nil)]])
+     :wrong
+     [:td {:style {:color "darkred"
+                   :font-weight "bold"}}
+      " ⊗ Wrong"]
+
+     :abandoned
+     [:td {:style {:color "darkred"
+                   :font-weight "bold"}}
+      " ⊗ Abandoned"])])
 
 (defn render-results-list [run-id attempts]
   [:div
    [:h2 "Breakdown:"]
-   [:ul {:style {:padding "0"}}
-    (map #(render-result-link % run-id) attempts)]])
+   [:table
+    [:thead
+     [:tr
+      [:th "Problem"]
+      [:th "Description"]
+      [:th "Result"]]]
+    [:tbody
+     (map #(render-result-link % run-id) attempts)]]])
 
 (defn render-results-page
   [run-id {:keys [final-score attempts run-type] :as run-data}]
-  (prn "FINAL SCORE---")
-  (pprint final-score)
-  (let []
+  [:div
+   [:h1 "Results"]
+   [:p (str "Your over-all score: " (:numerator final-score) "/" (:denominator final-score))]
 
-    [:div
-     [:h1 "Results"]
-     [:p (str "Your over-all score: " (:numerator final-score) "/" (:denominator final-score))]
-
-     (render-attempts-list run-id attempts)]
-    ))
+   (render-results-list run-id attempts)]
+  )
 
 (defn render-input-field [arg-type idx]
   (let [id (str "input-" idx)
