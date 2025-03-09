@@ -3,6 +3,7 @@
   (:require [cljs-http.client :as http]
             [cljs.pprint :refer [pprint]]
             [sherlockbench.storage :as storage]
+            [sherlockbench.config :as config]
             [cljs.core.async :refer [<!]]
             [reitit.frontend.easy :as reitit-easy]
             [clojure.string :as str])
@@ -23,14 +24,14 @@
   "Asynchronously checks if a given run-id references a valid run, returns a channel."
   [run-id]
   (go
-    (let [response (<! (http/post "http://localhost:3000/api/is-pending-run"
+    (let [response (<! (http/post (config/api-endpoint "/api/is-pending-run")
                                   {:with-credentials? false
                                    :json-params {:run-id run-id}}))]
       (:response (:body response)))))
 
 (defn start-run [store run-id]
   (go
-    (let [response (<! (http/post "http://localhost:3000/api/start-run"
+    (let [response (<! (http/post (config/api-endpoint "/api/start-run")
                                   {:with-credentials? false
                                    :json-params (cond-> {:client-id "sherlockbench-testme"}
                                                   (not (nil? run-id)) (assoc :existing-run-id run-id))}))
@@ -53,14 +54,14 @@
 
 (defn test-function [values attempt-store run-id attempt-id]
   (go
-    (let [response (<! (http/post "http://localhost:3000/api/test-function"
+    (let [response (<! (http/post (config/api-endpoint "/api/test-function")
                                   {:with-credentials? false
                                    :json-params {:run-id run-id
                                                  :attempt-id attempt-id
                                                  :args values}}))
           {{output :output} :body} response]
       
-      (swap! attempt-store update :log conj [:p (str (str/join ", " values) " → " output)])
+      (swap! attempt-store update :log conj [:p (str (str/join ", " values) " \u2192 " output)])
       (storage/set-attempt! attempt-id @attempt-store)
       )))
 
@@ -105,7 +106,7 @@
 
 (defn get-verification [store attempt-store run-id attempt-id & [message]]
   (go
-    (let [response (<! (http/post "http://localhost:3000/api/next-verification"
+    (let [response (<! (http/post (config/api-endpoint "/api/next-verification")
                                   {:with-credentials? false
                                    :json-params {:run-id run-id
                                                  :attempt-id attempt-id}}))
@@ -126,7 +127,7 @@
 
 (defn attempt-verification [store attempt-store value run-id attempt-id]
   (go
-    (let [response (<! (http/post "http://localhost:3000/api/attempt-verification"
+    (let [response (<! (http/post (config/api-endpoint "/api/attempt-verification")
                                   {:with-credentials? false
                                    :json-params {:run-id run-id
                                                  :attempt-id attempt-id
@@ -175,7 +176,7 @@
   (go
     (let [attempts (:attempts @store)]
       (let [response
-            (<! (http/post "http://localhost:3000/api/complete-run"
+            (<! (http/post (config/api-endpoint "/api/complete-run")
                            {:with-credentials? false
                             :json-params {:run-id run-id}}))
 

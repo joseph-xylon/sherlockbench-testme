@@ -117,7 +117,11 @@
        [:input {:type input-type
                 :id id
                 :name id
-                :placeholder (str "Enter " human-type)}])]))
+                :placeholder (str "Enter " human-type)
+                :autocapitalize "off"
+                :autocomplete "off"
+                :autocorrect "off"
+                :spellcheck "false"}])]))
 
 (defn investigation-input-form [run-id attempt-id arg-spec]
   [:form.attempt-form
@@ -141,7 +145,11 @@
         [:select#expected-out
          [:option {:value "true"} "true"]
          [:option {:value "false"} "false"]]
-        [:input#expected-out {:type input-type}])]
+        [:input#expected-out {:type input-type
+                                :autocapitalize "off"
+                                :autocomplete "off"
+                                :autocorrect "off"
+                                :spellcheck "false"}])]
      
      [:button.submit-btn {:on {:click [[:action/prevent-default]
                                        [:action/attempt-verification run-id attempt-id]]}} "Submit"]]))
@@ -165,7 +173,7 @@
    (case state
      (:investigate :verify)
      [:button#abandon.control {:on {:click [[:action/prompt-abandon run-id attempt-id]
-                                            [:action/goto-page :index {:run-id run-id}]]}} "Abandon"]
+                                            [:action/goto-next-problem run-id attempt-id]]}} "Abandon"]
 
      (:completed :abandoned)
      [:button#continue.control {:on {:click [[:action/goto-next-problem run-id attempt-id]]}} "Continue"])))

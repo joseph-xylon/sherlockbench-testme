@@ -83,7 +83,7 @@
 (defn landing-anonymous-page [_ _ _]
   {:hiccup
    [:div
-    [:h1 "Take the SherlochBench test!"]
+    [:h1 "Take the SherlockBench test!"]
     [:p "Here you can take the SherlockBench test yourself."]
     [:p "The test is anonymous (this site doesn't use cookies) but we "
      "do record the results of the test in our system."]
@@ -99,7 +99,7 @@
 (defn landing-competition-page [{{:keys [run-id]} :path-params} _ _]
   {:hiccup
    [:div
-    [:h1 "Take the SherlochBench test!"]
+    [:h1 "Take the SherlockBench test!"]
     [:p "Here you can take the SherlockBench test."]
     [:p "The link you used allows you to take the test with the "
      "\"competition\" problem set, which is the same problem set we test the "

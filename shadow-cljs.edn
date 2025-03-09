@@ -4,7 +4,9 @@
  {:app
   {:target :browser
    :modules {:main {:init-fn sherlockbench.core/main}}
-   :dev {:output-dir "resources/public/app-js"}}
+   :dev {:output-dir "resources/public/app-js"
+         :closure-defines {sherlockbench.config/api-url "http://localhost:3000"}}
+   :release {:closure-defines {sherlockbench.config/api-url "https://api.sherlockbench.com"}}}
 
   :portfolio
   {:target :browser
