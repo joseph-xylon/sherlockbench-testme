@@ -172,8 +172,7 @@
 
    (case state
      (:investigate :verify)
-     [:button#abandon.control {:on {:click [[:action/prompt-abandon run-id attempt-id]
-                                            [:action/goto-next-problem run-id attempt-id]]}} "Abandon"]
+     [:button#abandon.control {:on {:click [[:action/prompt-abandon run-id attempt-id]]}} "Abandon"]
 
      (:completed :abandoned)
      [:button#continue.control {:on {:click [[:action/goto-next-problem run-id attempt-id]]}} "Continue"])))

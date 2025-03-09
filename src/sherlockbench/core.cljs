@@ -205,6 +205,17 @@
 (defn main []
   (let [el (js/document.getElementById "app")]
 
+    ;; Helper function for navigating to the next problem
+    (defn navigate-to-next-problem [run-id current-attempt-id]
+      (let [attempts (:attempts @store)
+            next-problem (logic/find-next-problem attempts current-attempt-id)]
+        (remove-watch attempt-store ::render-attempt)
+        (if next-problem
+          ;; If there's a next problem, navigate to it
+          (reitit-easy/push-state :attempt {:run-id run-id :attempt-id (:attempt-id next-problem)} {})
+          ;; Otherwise, go back to index
+          (reitit-easy/push-state :index {:run-id run-id} {}))))
+
     ;; Globally handle DOM events
     (r/set-dispatch!
      (fn [{:keys [replicant/dom-event]} data]
@@ -234,22 +245,13 @@
                (logic/update-attempt-by-id store attempt-id
                                            :state :abandoned
                                            :result :abandoned)
-               (storage/set-run! run-id @store))
+               (storage/set-run! run-id @store)
+               ;; Only navigate to next problem if user confirms
+               (navigate-to-next-problem run-id attempt-id))
              )
 
            :action/goto-next-problem
-           (let [[run-id current-attempt-id] args
-                 attempts (:attempts @store)
-                 next-problem (logic/find-next-problem attempts current-attempt-id)]
-             (if next-problem
-               ;; If there's a next problem, navigate to it
-               (do
-                 (remove-watch attempt-store ::render-attempt)
-                 (reitit-easy/push-state :attempt {:run-id run-id :attempt-id (:attempt-id next-problem)} {}))
-               ;; Otherwise, go back to index
-               (do
-                 (remove-watch attempt-store ::render-attempt)
-                 (reitit-easy/push-state :index {:run-id run-id} {}))))
+           (apply navigate-to-next-problem args)
 
            :action/test-mystery-function
            (let [values (forms/collect-input-form-values)]
