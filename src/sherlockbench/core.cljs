@@ -6,7 +6,7 @@
             [reitit.coercion.spec :as rss]
             [sherlockbench.logic :as logic]
             [sherlockbench.ui :as ui]
-            [sherlockbench.utility :refer [valid-uuid?]]
+            [sherlockbench.utility :as util]
             [sherlockbench.storage :as storage]
             [sherlockbench.forms :as forms]
             [cljs.pprint :refer [pprint]]
@@ -19,6 +19,7 @@
 
 (defonce store (atom nil))
 (defonce attempt-store (atom nil))
+(defonce problem-sets (atom {}))
 
 ;; In this application, view functions follow a specific pattern to properly
 ;; separate rendering from side effects (like routing):
@@ -49,7 +50,7 @@
    
    :action-fn
    (fn []
-     (if (not (valid-uuid? run-id))
+     (if (not (util/valid-uuid? run-id))
        ;; there's no query string
        (reitit-easy/push-state :landing-anonymous {} {})
 
@@ -80,21 +81,39 @@
     [:p "If this is wrong please " contact-us]]
    :action-fn pass})
 
-(defn landing-anonymous-page [_ _ _]
-  {:hiccup
-   [:div
-    [:h1 "Take the SherlockBench test!"]
-    [:p "Here you can take the SherlockBench test yourself."]
-    [:p "The test is anonymous (this site doesn't use cookies) but we "
-     "do record the results of the test in our system."]
-    [:p "This is an example set of questions just to demonstrate how the test
-   works. If you want to take the full test please " contact-us]
-    [:button {:on {:click [[:action/start-run nil]]}
-              :style {:margin-top 20
-                      :font-size 20}}
-     "Start Test"]]
-   
-   :action-fn pass})
+(defn landing-anonymous-page [_ _ el]
+  (let [render-fn
+        (fn [problem-set-map]
+          [:div
+           [:h1 "Take the SherlockBench test!"]
+           [:p "Here you can take the SherlockBench test yourself."]
+           [:p "The test is anonymous (this site doesn't use cookies) but we "
+            "do record the results of the test in our system."]
+           [:p "Pick a problem-set from the dropdown."]
+           [:form
+            [:select#pset-select {:name "problem-set"}
+             [:option {:value "default"} "Select"]
+             (for [[group-name v] problem-set-map]
+               [:optgroup {:label group-name}
+                (for [{set-id :id name- :name} v]
+                  [:option {:value set-id} name-])])]]
+           [:button {:on {:click [[:action/prevent-default]
+                                  [:action/start-run-by-pset]]}
+                     :style {:margin-top 20
+                             :font-size 20}}
+            "Start Test"]])]
+    {:hiccup
+     (render-fn @problem-sets)
+     
+     :action-fn (fn []
+                  ;; the list of problem-sets loads in
+                  (add-watch problem-sets ::render-problem-sets
+                             (fn [_ _ _ problem-set-map]
+                               (r/render el (render-fn problem-set-map))))
+                  (go
+                    (let [result (<! (logic/get-problem-sets))]
+                      (reset! problem-sets result)
+                      (pprint @problem-sets))))}))
 
 (defn landing-competition-page [{{:keys [run-id]} :path-params} _ _]
   {:hiccup
@@ -116,7 +135,7 @@
     [:p "The problems are not ordered by difficulty. If you find one "
      "too hard, skip it and come back to it later."]
     [:p "You may use a calculator if it helps."]
-    [:button {:on {:click [[:action/start-run run-id]]}
+    [:button {:on {:click [[:action/start-run-by-id run-id]]}
               :style {:margin-top 20
                       :font-size 20}}
      "Start Test"]]
@@ -231,8 +250,13 @@
            :action/alert
            (js/alert (first args))
 
-           :action/start-run
+           :action/start-run-by-id
            (apply logic/start-run store args)
+
+           :action/start-run-by-pset
+           (let [pset-id (forms/collect-form-value-by-id "pset-select")]
+             (when-not (= pset-id "default")
+                 (logic/start-run store nil pset-id)))
 
            :action/goto-page
            (do
@@ -263,7 +287,7 @@
            (apply logic/get-verification store attempt-store args)
 
            :action/attempt-verification
-           (let [value (forms/collect-verification-form-value)]
+           (let [value (forms/collect-form-value-by-id "expected-out")]
              (apply logic/attempt-verification store attempt-store value args)
              (forms/clear-verification-form))
            

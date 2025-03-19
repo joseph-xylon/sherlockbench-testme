@@ -19,10 +19,10 @@
                          value))))
         values))))
 
-(defn collect-verification-form-value
+(defn collect-form-value-by-id
   "Gets the value from a form element with ID expected-out"
-  []
-  (when-let [input-el (js/document.getElementById "expected-out")]
+  [fid]
+  (when-let [input-el (js/document.getElementById fid)]
     (.-value input-el)))
 
 (defn clear-verification-form

@@ -29,12 +29,22 @@
                                    :json-params {:run-id run-id}}))]
       (:response (:body response)))))
 
-(defn start-run [store run-id]
+(defn get-problem-sets
+  []
+  (go
+    (let [response (<! (http/get (config/api-endpoint "/api/problem-sets")
+                                 {:with-credentials? false}))
+          {{:keys [problem-sets]} :body} response]
+
+      problem-sets)))
+
+(defn start-run [store run-id pset-id]
   (go
     (let [response (<! (http/post (config/api-endpoint "/api/start-run")
                                   {:with-credentials? false
                                    :json-params (cond-> {:client-id "sherlockbench-testme"}
-                                                  (not (nil? run-id)) (assoc :existing-run-id run-id))}))
+                                                  (not (nil? run-id)) (assoc :existing-run-id run-id)
+                                                  (not (nil? pset-id)) (assoc :problem-set pset-id))}))
           {{:keys [run-id run-type benchmark-version attempts]} :body} response
           attempts-named (process-attempts attempts)
           run-data {:run-id run-id
