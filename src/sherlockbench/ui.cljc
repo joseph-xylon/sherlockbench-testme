@@ -146,10 +146,10 @@
          [:option {:value "true"} "true"]
          [:option {:value "false"} "false"]]
         [:input#expected-out {:type input-type
-                                :autocapitalize "off"
-                                :autocomplete "off"
-                                :autocorrect "off"
-                                :spellcheck "false"}])]
+                              :autocapitalize "off"
+                              :autocomplete "off"
+                              :autocorrect "off"
+                              :spellcheck "false"}])]
      
      [:button.submit-btn {:on {:click [[:action/prevent-default]
                                        [:action/attempt-verification run-id attempt-id]]}} "Submit"]]))
