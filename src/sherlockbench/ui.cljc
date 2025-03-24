@@ -38,14 +38,14 @@
 
 (defn render-attempts-list [run-id attempts]
   [:div
-   [:h2 "Problems:"]
+   [:h3 "Problems:"]
    [:ul {:style {:padding "0"}}
     (map #(render-attempt-link % run-id) attempts)]])
 
 (defn render-index-page
   [run-id {:keys [attempts run-type]}]
-  [:div
-   [:h1 "SherlockBench Test"]
+  [:div.landing
+   [:h2 "SherlockBench Test"]
    (when (seq attempts)
      (render-attempts-list run-id attempts))
 
@@ -78,7 +78,7 @@
 
 (defn render-results-list [run-id attempts]
   [:div
-   [:h2 "Breakdown:"]
+   [:h3 "Breakdown:"]
    [:table
     [:thead
      [:tr
@@ -91,7 +91,7 @@
 (defn render-results-page
   [run-id {:keys [final-score attempts run-type] :as run-data}]
   [:div
-   [:h1 "Results"]
+   [:h2 "Results"]
    [:p (str "Your over-all score: " (:numerator final-score) "/" (:denominator final-score))]
 
    (render-results-list run-id attempts)]
@@ -125,7 +125,7 @@
 
 (defn investigation-input-form [run-id attempt-id arg-spec]
   [:form.attempt-form
-   [:h2 "Test the Mystery Function"]
+   [:h3 "Test the Mystery Function"]
    (map-indexed
     #(render-input-field %2 %1)
     arg-spec)
@@ -138,7 +138,7 @@
                      "integer" "number"
                      "text")]
     [:form.attempt-form
-     [:h2 "What will the output be with these inputs?"]
+     [:h3 "What will the output be with these inputs?"]
      [:div.form-group
       [:label {:for "expected-out"} (str/join ", " inputs)]
       (if (= output-type "boolean")
@@ -199,7 +199,7 @@
    {:keys [log] :as attempt-data}]
 
   [:div.attempt-page
-   [:h1 problem-name]
+   [:h2 problem-name]
    (case state
      :investigate
      [:p "Test the mystery function until you think you know what it does. Then
@@ -228,7 +228,7 @@
     
     ;; Log section
     [:div.attempt-log-section
-     [:h2 "Test Log"]
+     [:h3 "Test Log"]
      (render-log-content log)]]
    
    [:div.attempt-navigation

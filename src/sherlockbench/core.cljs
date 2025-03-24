@@ -39,7 +39,7 @@
 
 (defn redirect-placeholder [s]
   [:div
-   [:h1 s]
+   [:h2 s]
    [:p "If you see this for more than a few seconds something "
     "is broken. Please " contact-us]])
 
@@ -74,8 +74,8 @@
 
 (defn error-run-id-page [{{:keys [run-id]} :path-params} _ _]
   {:hiccup
-   [:div
-    [:h1 "Invalid Run"]
+   [:div.landing
+    [:h2 "Invalid Run"]
     [:p "Either your run ID is invalid/expired, or this run is already "
      "in-progress in another browser."]
     [:p "If this is wrong please " contact-us]]
@@ -84,8 +84,8 @@
 (defn landing-anonymous-page [_ _ el]
   (let [render-fn
         (fn [problem-set-map]
-          [:div
-           [:h1 "Take the SherlockBench test!"]
+          [:div.landing
+           [:h2 "Take the SherlockBench test!"]
            [:p "Here you can take the SherlockBench test yourself."]
            [:p "The test is anonymous (this site doesn't use cookies) but we "
             "do record the results of the test in our system."]
@@ -117,8 +117,8 @@
 
 (defn landing-competition-page [{{:keys [run-id]} :path-params} _ _]
   {:hiccup
-   [:div
-    [:h1 "Take the SherlockBench test!"]
+   [:div.landing
+    [:h2 "Take the SherlockBench test!"]
     [:p "Here you can take the SherlockBench test."]
     [:p "The link you used allows you to take the test with the "
      "\"competition\" problem set, which is the same problem set we test the "
@@ -203,7 +203,7 @@
             (if attempt
               (ui/render-attempt-page run-id attempt attempt-data)
               [:div 
-               [:h1 "Problem Not Found"]
+               [:h2 "Problem Not Found"]
                [:p "The requested problem could not be found."]
                [:p [:a {:href (reitit-easy/href :index {:run-id run-id})} "Return to Index"]]])))]
 
