@@ -99,18 +99,20 @@
            [:p "Pick a problem-set from the dropdown."]
            [:form
             [:select#pset-select {:name "problem-set"}
-             [:option {:value "default"} "Select"]
+             [:option {:value "default"} "select..."]
              (print problem-set-map)
              (if (true? config/list-subsets)
                ;; list problem-sets with their subsets
                (for [[group-name v] problem-set-map]
-                 [:optgroup {:label group-name}
-                  (for [{set-id :id name- :name} v]
-                    [:option {:value set-id} name-])])
+                 (when (seq v)
+                  [:optgroup {:label group-name}
+                   (for [{set-id :id name- :name} v]
+                     [:option {:value set-id} name-])]))
 
                ;; Only list "all" for each subset
                (for [[group-name v] problem-set-map]
-                 [:option {:value (find-id-ending-with-all v)} (name group-name)]))]]
+                 (when (seq v)
+                   [:option {:value (find-id-ending-with-all v)} (name group-name)])))]]
 
            [:button {:on {:click [[:action/prevent-default]
                                   [:action/start-run-by-pset]]}
