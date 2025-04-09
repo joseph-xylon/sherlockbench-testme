@@ -9,6 +9,7 @@
             [sherlockbench.utility :as util]
             [sherlockbench.storage :as storage]
             [sherlockbench.forms :as forms]
+            [sherlockbench.config :as config]
             [cljs.pprint :refer [pprint]]
             [cljs.core.async :refer [<!]]
             [clojure.string :as str]))
@@ -80,6 +81,12 @@
      "in-progress in another browser."]
     [:p "If this is wrong please " contact-us]]
    :action-fn pass})
+ 
+(defn find-id-ending-with-all [maps]
+  (->> maps
+       (map :id)
+       (filter #(str/ends-with? % "/all"))
+       first))
 
 (defn landing-anonymous-page [_ _ el]
   (let [render-fn
@@ -93,10 +100,18 @@
            [:form
             [:select#pset-select {:name "problem-set"}
              [:option {:value "default"} "Select"]
-             (for [[group-name v] problem-set-map]
-               [:optgroup {:label group-name}
-                (for [{set-id :id name- :name} v]
-                  [:option {:value set-id} name-])])]]
+             (print problem-set-map)
+             (if (true? config/list-subsets)
+               ;; list problem-sets with their subsets
+               (for [[group-name v] problem-set-map]
+                 [:optgroup {:label group-name}
+                  (for [{set-id :id name- :name} v]
+                    [:option {:value set-id} name-])])
+
+               ;; Only list "all" for each subset
+               (for [[group-name v] problem-set-map]
+                 [:option {:value (find-id-ending-with-all v)} (name group-name)]))]]
+
            [:button {:on {:click [[:action/prevent-default]
                                   [:action/start-run-by-pset]]}
                      :style {:margin-top 20

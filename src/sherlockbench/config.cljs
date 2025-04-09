@@ -1,9 +1,9 @@
 (ns sherlockbench.config
   (:require-macros [cljs.core :refer [goog-define]]))
 
-;; The api-url is defined by closure compiler defines based on build type
-;; See shadow-cljs.edn for the values
+;; These values are replaced by the closure compiler. See shadow-cljs.edn
 (goog-define api-url "http://localhost:3000")
+(goog-define list-subsets true)
 
 (defn api-endpoint [path]
   (str api-url path))
