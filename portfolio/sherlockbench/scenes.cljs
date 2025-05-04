@@ -47,6 +47,7 @@
    {:attempt-id "abc123"
     :problem-name "Problem 1"
     :arg-spec ["integer" "integer"]
+    :test-limit 20
     :state :investigate}
    {:log [[:p "Hello"]
           [:p "do you"]
@@ -58,6 +59,7 @@
    {:attempt-id "abc123"
     :problem-name "Problem 2"
     :arg-spec ["string" "boolean"]
+    :test-limit 20
     :state :verify}
    {:log [[:p "Hello"]
           [:p "do you"]
@@ -71,6 +73,7 @@
    {:attempt-id "abc123"
     :problem-name "Problem 2"
     :arg-spec ["string" "boolean"]
+    :test-limit 20
     :state :verify}
    {:log [[:p "Hello"]
           [:p "do you"]
@@ -84,6 +87,7 @@
    {:attempt-id "abc123"
     :problem-name "Problem 2"
     :arg-spec ["string" "boolean"]
+    :test-limit 20
     :state :completed}
    {:log [[:p "Hello"]
           [:p "do you"]
@@ -97,6 +101,7 @@
    {:attempt-id "abc123"
     :problem-name "Problem 2"
     :arg-spec ["string" "boolean"]
+    :test-limit 20
     :state :abandoned}
    {:log [[:p "Hello"]
           [:p "do you"]

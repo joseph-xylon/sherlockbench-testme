@@ -69,9 +69,13 @@
                                    :json-params {:run-id run-id
                                                  :attempt-id attempt-id
                                                  :args values}}))
-          {{output :output} :body} response]
-      
-      (swap! attempt-store update :log conj [:p (str (str/join ", " values) " \u2192 " output)])
+          {status :status
+           {output :output error :error} :body} response
+          result-message (if (= status 400)
+                           error
+                           output)]
+
+      (swap! attempt-store update :log conj [:p (str (str/join ", " values) " \u2192 " result-message)])
       (storage/set-attempt! attempt-id @attempt-store)
       )))
 

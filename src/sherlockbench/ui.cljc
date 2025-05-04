@@ -195,15 +195,17 @@
 
 (defn render-attempt-page
   [run-id
-   {:keys [attempt-id arg-spec problem-name state] :as attempt}
+   {:keys [attempt-id arg-spec problem-name test-limit state] :as attempt}
    {:keys [log] :as attempt-data}]
 
   [:div.attempt-page
    [:h2 problem-name]
    (case state
      :investigate
-     [:p "Test the mystery function until you think you know what it does. Then
+     (list
+      [:p "Test the mystery function until you think you know what it does. Then
    click \"I'm Ready\" and the system will test you."]
+      [:p (str "You may test this function up-to " test-limit " times.")])
 
      :verify
      [:p "Prove you have figured out what the function does."]
