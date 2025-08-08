@@ -14,7 +14,7 @@
           (recur (inc idx)
                  (conj values 
                        (case form-type
-                         "integer" (js/parseInt value)
+                         "integer" (js/parseInt (str/trim value))
                          "boolean" (= value "true")
                          value))))
         values))))
