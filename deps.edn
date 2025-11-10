@@ -1,16 +1,16 @@
 {:paths ["src" "test" "portfolio" "resources"]
  :deps {;; note. these versions are chozen based on what works with shadow-cljs
         ;; https://shadow-cljs.github.io/docs/UsersGuide.html#troubleshooting
-        org.clojure/clojure {:mvn/version "1.11.1"}
-        org.clojure/clojurescript {:mvn/version "1.11.132"}
-        org.clojure/core.async {:mvn/version "1.5.648"}
-        thheller/shadow-cljs {:mvn/version "2.28.21"}
+        org.clojure/clojure {:mvn/version "1.12.3"}
+        org.clojure/clojurescript {:mvn/version "1.12.42"}
+        org.clojure/core.async {:mvn/version "1.8.741"}
+        thheller/shadow-cljs {:mvn/version "3.2.1"}
 
         ;; other deps
-        no.cjohansen/portfolio {:mvn/version "2025.01.28"}
-        no.cjohansen/replicant {:mvn/version "2025.02.02"}
-        metosin/reitit {:mvn/version "0.8.0-alpha1"}
-        metosin/reitit-spec {:mvn/version "0.8.0-alpha1"}
-        metosin/reitit-frontend {:mvn/version "0.8.0-alpha1"}
-        cljs-http/cljs-http {:mvn/version "0.1.48"}
+        no.cjohansen/portfolio {:mvn/version "2025.10.1"}
+        no.cjohansen/replicant {:mvn/version "2025.06.21"}
+        metosin/reitit {:mvn/version "0.9.2"}
+        metosin/reitit-spec {:mvn/version "0.9.2"}
+        metosin/reitit-frontend {:mvn/version "0.9.2"}
+        cljs-http/cljs-http {:mvn/version "0.1.49"}
         funcool/hodgepodge {:mvn/version "0.1.4"}}}
