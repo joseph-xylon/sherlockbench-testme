@@ -1,14 +1,14 @@
 {:paths ["src" "test" "portfolio" "resources"]
  :deps {;; note. these versions are chozen based on what works with shadow-cljs
         ;; https://shadow-cljs.github.io/docs/UsersGuide.html#troubleshooting
-        org.clojure/clojure {:mvn/version "1.12.4"}
+        org.clojure/clojure {:mvn/version "1.12.5"}
         org.clojure/clojurescript {:mvn/version "1.12.145"}
         org.clojure/core.async {:mvn/version "1.9.865"}
-        thheller/shadow-cljs {:mvn/version "3.4.10"}
+        thheller/shadow-cljs {:mvn/version "3.4.12"}
 
         ;; other deps
         no.cjohansen/portfolio {:mvn/version "2026.03.1"}
-        no.cjohansen/replicant {:mvn/version "2025.12.1"}
+        no.cjohansen/replicant {:mvn/version "2026.07.1"}
         metosin/reitit {:mvn/version "0.10.1"}
         metosin/reitit-spec {:mvn/version "0.10.1"}
         metosin/reitit-frontend {:mvn/version "0.10.1"}
